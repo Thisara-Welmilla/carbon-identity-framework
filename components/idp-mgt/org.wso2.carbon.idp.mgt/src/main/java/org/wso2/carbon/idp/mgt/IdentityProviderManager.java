@@ -85,7 +85,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.xml.stream.XMLStreamException;
@@ -642,11 +641,6 @@ public class IdentityProviderManager implements IdpManager {
         }
         propertiesList.add(idPEntityIdProperty);
 
-        if (IdentityTenantUtil.isTenantQualifiedUrlsEnabled()) {
-            // Add SSO URL as a destination URL if not already available.
-            addSSOUrlAsDestinationUrl(samlFederatedAuthConfig, samlSSOUrl, propertiesList);
-        }
-
         for (Property property : samlFederatedAuthConfig.getProperties()) {
             if (property != null &&
                     !IdentityApplicationConstants.Authenticator.SAML2SSO.SSO_URL.equals(property.getName()) &&
@@ -695,37 +689,6 @@ public class IdentityProviderManager implements IdpManager {
         propertiesList.add(samlAuthnRequestSigningProperty);
         samlFederatedAuthConfig.setProperties(propertiesList.toArray(new Property[propertiesList.size()]));
         return samlFederatedAuthConfig;
-    }
-
-    private void addSSOUrlAsDestinationUrl(FederatedAuthenticatorConfig federatedAuthenticatorConfig,
-                                           String ssoUrl,
-                                           List<Property> propertiesList) {
-
-        // First find the available configured destination URLs.
-        List<Property> destinationURLs = Arrays.stream(federatedAuthenticatorConfig.getProperties())
-                .filter(property -> property.getName()
-                        .startsWith(IdentityApplicationConstants.Authenticator.SAML2SSO.DESTINATION_URL_PREFIX))
-                .collect(Collectors.toList());
-
-        // Check whether the SSO URL is already available as a destination URL
-        boolean isSAMLSSOUrlNotPresentAsDestination = destinationURLs.stream()
-                .noneMatch(x -> StringUtils.equals(ssoUrl, x.getValue()));
-
-        if (isSAMLSSOUrlNotPresentAsDestination) {
-            // There are no destination properties matching the default SSO URL.
-            int propertyNameIndex = destinationURLs.size() + 1;
-            Property destinationURLProperty = buildDestinationURLProperty(ssoUrl, propertyNameIndex);
-            propertiesList.add(destinationURLProperty);
-        }
-    }
-
-    private Property buildDestinationURLProperty(String destinationURL, int index) {
-
-        Property destinationURLProperty = new Property();
-        destinationURLProperty.setName(IdentityApplicationConstants.Authenticator.SAML2SSO.DESTINATION_URL_PREFIX +
-                IdentityApplicationConstants.MULTIVALUED_PROPERTY_CHARACTER + index);
-        destinationURLProperty.setValue(destinationURL);
-        return destinationURLProperty;
     }
 
     private Property resolveFedAuthnProperty(String epUrl, FederatedAuthenticatorConfig fedAuthnConfig,
