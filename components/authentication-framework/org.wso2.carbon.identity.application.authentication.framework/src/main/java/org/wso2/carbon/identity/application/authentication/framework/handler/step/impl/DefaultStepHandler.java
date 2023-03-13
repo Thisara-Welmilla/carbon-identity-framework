@@ -127,7 +127,31 @@ public class DefaultStepHandler implements StepHandler {
         StepConfig stepConfig = context.getSequenceConfig().getStepMap()
                 .get(context.getCurrentStep());
 
-        List<AuthenticatorConfig> authConfigList = stepConfig.getAuthenticatorList();
+        List<AuthenticatorConfig> unfilteredAuthConfigList = stepConfig.getAuthenticatorList();
+        List<AuthenticatorConfig> authConfigList = new ArrayList<>();
+
+        //Get authentication list filtered
+        for (AuthenticatorConfig authenticatorConfig : unfilteredAuthConfigList) {
+            ApplicationAuthenticator authenticator = authenticatorConfig
+                    .getApplicationAuthenticator();
+            try {
+                if (authenticator != null && authenticator.canUserAuthenticate(request, context)) {
+                    authConfigList.add(authenticatorConfig);
+                }
+            } catch (AuthenticationFailedException e) {
+                throw new FrameworkException(e.getErrorCode(), e.getMessage(), e);
+            }
+        }
+
+        if (authConfigList.isEmpty() & !unfilteredAuthConfigList.isEmpty()) {
+            try {
+                response.sendRedirect("https://accounts.asg.io/t/org123/authenticationendpoint/" +
+                        "retry.do?ut=org123&sp=test&authFlowId=5f9b98a9-935c-4f4e-8497-e60a5f461e54&noo=xwxwx");
+                return;
+            } catch (java.io.IOException e) {
+                throw new FrameworkException(e.getMessage(), e);
+            }
+        }
 
         String authenticatorNames = FrameworkUtils.getAuthenticatorIdPMappingString(authConfigList);
 

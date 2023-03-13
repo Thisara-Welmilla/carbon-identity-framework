@@ -109,4 +109,16 @@ public interface ApplicationAuthenticator extends Serializable {
 
         return new String[0];
     }
+
+    /**
+     * Check whether user can authenticate with the authenticator.
+     *
+     * @param request       Request which comes to the framework for authentication.
+     * @param context       Authentication context.
+     * @return boolean
+     */
+    default boolean canUserAuthenticate(HttpServletRequest request, AuthenticationContext context)
+            throws AuthenticationFailedException {
+        return true;
+    }
 }
