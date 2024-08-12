@@ -33,6 +33,9 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.base.MultitenantConstants;
+import org.wso2.carbon.identity.action.execution.ActionExecutorService;
+import org.wso2.carbon.identity.action.execution.internal.ActionExecutionServiceComponentHolder;
+import org.wso2.carbon.identity.action.management.ActionManagementService;
 import org.wso2.carbon.identity.application.common.model.IdentityProvider;
 import org.wso2.carbon.identity.application.common.util.IdentityApplicationConstants;
 import org.wso2.carbon.identity.claim.metadata.mgt.ClaimMetadataManagementService;
@@ -489,5 +492,46 @@ public class IdPManagementServiceComponent {
     protected void unsetClaimMetaMgtService(ClaimMetadataManagementService claimMetaMgtService) {
 
         IdpMgtServiceComponentHolder.getInstance().setClaimMetadataManagementService(null);
+    }
+
+    @Reference(
+            name = "action.management.service",
+            service = ActionManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetActionManagementService"
+    )
+    protected void setActionManagementService(ActionManagementService actionManagementService) {
+
+        log.debug("Registering a reference for ActionManagementService in the ActionExecutionServiceComponent.");
+        ActionExecutionServiceComponentHolder.getInstance().setActionManagementService(actionManagementService);
+    }
+
+    protected void unsetActionManagementService(ActionManagementService actionManagementService) {
+
+        log.debug("Unregistering the reference for ActionManagementService in the ActionExecutionServiceComponent.");
+        if (ActionExecutionServiceComponentHolder.getInstance().getActionManagementService()
+                .equals(actionManagementService)) {
+            ActionExecutionServiceComponentHolder.getInstance().setActionManagementService(null);
+        }
+    }
+
+    @Reference(
+            name = "action.execution.service",
+            service = ActionExecutorService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unregisterActionExecutorService"
+    )
+    protected void registerActionExecutionService(ActionExecutorService actionExecutorService) {
+
+        log.debug("Registering the ActionExecutorService in OAuthServiceComponent.");
+        IdpMgtServiceComponentHolder.getInstance().setActionExecutorService(actionExecutorService);
+    }
+
+    protected void unregisterActionExecutorService(ActionExecutorService actionExecutorService) {
+
+        log.debug("Unregistering the ActionExecutorService in OAuthServiceComponent.");
+        IdpMgtServiceComponentHolder.getInstance().setActionExecutorService(null);
     }
 }

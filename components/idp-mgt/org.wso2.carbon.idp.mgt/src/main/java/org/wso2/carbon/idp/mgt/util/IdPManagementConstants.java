@@ -116,6 +116,9 @@ public class IdPManagementConstants {
 
     public static final String IS_TRUSTED_TOKEN_ISSUER = "isTrustedTokenIssuer";
 
+    // External custom authenticator.
+    public static final String EXTERNAL_AUTHENTICATOR = "ExternalAuthenticator";
+
     // Email OTP properties.
     public static final String EMAIL_OTP_AUTHENTICATOR_NAME = "EmailOTP";
     public static final String EMAIL_OTP_ONLY_NUMERIC_CHARS_PROPERTY = "OnlyNumericCharactersForOtp";

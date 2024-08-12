@@ -28,6 +28,12 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.util.KeyStoreManager;
 import org.wso2.carbon.database.utils.jdbc.exceptions.DataAccessException;
+import org.wso2.carbon.identity.action.execution.model.ActionType;
+import org.wso2.carbon.identity.action.management.exception.ActionMgtException;
+import org.wso2.carbon.identity.action.management.model.Action;
+import org.wso2.carbon.identity.action.management.model.AuthProperty;
+import org.wso2.carbon.identity.action.management.model.AuthType;
+import org.wso2.carbon.identity.action.management.model.EndpointConfig;
 import org.wso2.carbon.identity.application.common.model.Claim;
 import org.wso2.carbon.identity.application.common.model.ClaimConfig;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
@@ -85,18 +91,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-import java.util.Date;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -1424,6 +1419,7 @@ public class IdPManagementDAO {
             prepStmt1.execute();
 
             int authnId = getAuthenticatorIdentifier(dbConnection, idpId, authnConfig.getName());
+            addConfigAsAction(authnConfig, IdentityTenantUtil.getTenantDomain(tenantId));
 
             sqlStmt = IdPManagementConstants.SQLQueries.ADD_IDP_AUTH_PROP_SQL;
 
@@ -1449,6 +1445,74 @@ public class IdPManagementDAO {
             IdentityDatabaseUtil.closeStatement(prepStmt2);
             IdentityDatabaseUtil.closeStatement(prepStmt1);
         }
+    }
+
+    private void addConfigAsAction(FederatedAuthenticatorConfig authnConfig, String tenantDomain)
+            throws IdentityProviderManagementException {
+
+        if (IdPManagementConstants.EXTERNAL_AUTHENTICATOR.equals(authnConfig.getName())) {
+            try {
+                Action action = IdpMgtServiceComponentHolder.getInstance().getActionManagementService().addAction(
+                        Action.ActionTypes.AUTHENTICATION.getActionType(), buildAction(authnConfig), tenantDomain));
+                FederatedAuthenticatorConfig actionAuthnConfig = new FederatedAuthenticatorConfig();
+
+                Property actionIdProperty = new Property();
+                actionIdProperty.setName("actionID");
+                actionIdProperty.setValue(action.getId());
+
+                Property selfActionProperty = new Property();
+                selfActionProperty.setName("self");
+                selfActionProperty.setValue("buildedlink");
+
+                Property[] properties = new Property[]{actionIdProperty, selfActionProperty};
+
+                actionAuthnConfig.setProperties(properties);
+            } catch (ActionMgtException e) {
+                throw new IdentityProviderManagementException("wdcwwecwe", e);
+            }
+        }
+    }
+
+    /**
+     * Create Action from the Action model.
+     *
+     * @return Action.
+     */
+    private Action buildAction(FederatedAuthenticatorConfig authnConfig) {
+
+        String actionDescription = "";
+        String actionEndpoint;
+        AuthType.AuthenticationType authType;
+        List<AuthProperty> authProperties = new ArrayList<>();
+
+        for (Property property : authnConfig.getProperties()) {
+            switch (property.getName()) {
+                case "endpint":
+                    actionEndpoint = property.getValue();
+                    break;
+                case "authType":
+                    authType = AuthType.AuthenticationType.valueOf(property.getValue());
+                    break;
+                case "authProperties":
+                    authProperties.add();
+                    break;
+                default:
+                    break;
+            }
+
+        }
+        Action.ActionRequestBuilder actionRequestBuilder = new Action.ActionRequestBuilder()
+                .name(Action.ActionTypes.AUTHENTICATION.name())
+                .description(actionDescription)
+                .endpoint(new EndpointConfig.EndpointConfigBuilder()
+                        .uri(actionEndpoint)
+                        .authentication(new AuthType.AuthTypeBuilder()
+                                .type(authType)
+                                .properties(authProperties)
+                                .build())
+                        .build());
+
+        return actionRequestBuilder.build();
     }
 
     private void deleteFederatedAuthenticatorConfig(FederatedAuthenticatorConfig authnConfig,
