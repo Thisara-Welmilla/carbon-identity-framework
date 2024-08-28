@@ -40,6 +40,9 @@ public class ActionMgtConstants {
         ERROR_NO_ACTION_CONFIGURED_ON_GIVEN_ACTION_TYPE_AND_ID("60003",
                 "Unable to perform the operation.",
                 "No Action is configured on the given Action Type and Id."),
+        ERROR_NO_ACTION_FOUND_ON_GIVEN_ACTION_TYPE_AND_ID("60003",
+                "Action is not found.",
+                "No Action is found for the given Action Type and Id."),
 
         // Server errors.
         ERROR_WHILE_ADDING_ACTION("65001", "Error while adding Action.",

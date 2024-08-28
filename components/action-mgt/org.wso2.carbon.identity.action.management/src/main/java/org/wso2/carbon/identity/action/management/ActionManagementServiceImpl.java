@@ -146,8 +146,15 @@ public class ActionManagementServiceImpl implements ActionManagementService {
         if (LOG.isDebugEnabled()) {
             LOG.debug(String.format("Retrieving Action of Action ID: %s", actionId));
         }
-        return CACHE_BACKED_DAO.getActionByActionId(getActionTypeFromPath(actionType), actionId,
+
+        Action action = CACHE_BACKED_DAO.getActionByActionId(getActionTypeFromPath(actionType), actionId,
                 IdentityTenantUtil.getTenantId(tenantDomain));
+        if (action == null) {
+            throw ActionManagementUtil.handleClientException(
+                    ActionMgtConstants.ErrorMessages.ERROR_NO_ACTION_FOUND_ON_GIVEN_ACTION_TYPE_AND_ID);
+        }
+
+        return action;
     }
 
     @Override
