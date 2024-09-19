@@ -166,7 +166,18 @@ public class FrameworkServiceDataHolder {
 
     public List<ApplicationAuthenticator> getAuthenticators() {
 
+        // call db and get all authenticators
         return authenticators;
+    }
+
+    public void addAuthenticator(ApplicationAuthenticator authenticator) {
+
+        authenticators.add(authenticator);
+    }
+
+    public void removeAuthenticator(ApplicationAuthenticator authenticator) {
+
+        authenticators.remove(authenticator);
     }
 
     /**

@@ -481,7 +481,7 @@ public class FrameworkServiceComponent {
     )
     protected void setAuthenticator(ApplicationAuthenticator authenticator) {
 
-        FrameworkServiceDataHolder.getInstance().getAuthenticators().add(authenticator);
+        FrameworkServiceDataHolder.getInstance().addAuthenticator(authenticator);
 
         Property[] configProperties = null;
 
@@ -578,7 +578,7 @@ public class FrameworkServiceComponent {
 
     protected void unsetAuthenticator(ApplicationAuthenticator authenticator) {
 
-        FrameworkServiceDataHolder.getInstance().getAuthenticators().remove(authenticator);
+        FrameworkServiceDataHolder.getInstance().removeAuthenticator(authenticator);
         String authenticatorName = authenticator.getName();
         ApplicationAuthenticatorService appAuthenticatorService = ApplicationAuthenticatorService.getInstance();
 

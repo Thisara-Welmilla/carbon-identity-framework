@@ -48,6 +48,8 @@ public class ApplicationAuthenticatorService {
     }
 
     public List<LocalAuthenticatorConfig> getLocalAuthenticators() {
+
+        // Retrieve all authenticators from the database
         return this.localAuthenticators;
     }
 
