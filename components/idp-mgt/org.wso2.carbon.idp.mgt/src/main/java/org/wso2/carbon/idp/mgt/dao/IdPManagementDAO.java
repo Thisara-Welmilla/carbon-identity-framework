@@ -1148,7 +1148,7 @@ public class IdPManagementDAO {
                 }
 
                 authnConfig.setDisplayName(rs.getString("DISPLAY_NAME"));
-                // TODO: Read from database and set the DefinedBy property to the authenticator.
+                authnConfig.setDefinedByType(IdentityConstants.DefinedByType.valueOf(rs.getString("DEFINED_BY")));
                 authnConfig.setDefinedByType(IdentityConstants.DefinedByType.SYSTEM);
 
                 if (defaultAuthName != null && authnConfig.getName().equals(defaultAuthName)) {
@@ -1426,7 +1426,7 @@ public class IdPManagementDAO {
             }
             prepStmt1.setString(4, authnConfig.getName());
             prepStmt1.setString(5, authnConfig.getDisplayName());
-            //TODO: prepStmt1.setString(6, authnConfig.getDefinedByType().toString());
+            prepStmt1.setString(6, authnConfig.getDefinedByType().toString());
             prepStmt1.execute();
 
             int authnId = getAuthenticatorIdentifier(dbConnection, idpId, authnConfig.getName());
@@ -3419,8 +3419,7 @@ public class IdPManagementDAO {
                 String roleClaimUri = rs.getString("ROLE_CLAIM_URI");
 
                 String defaultAuthenticatorName = rs.getString("DEFAULT_AUTHENTICATOR_NAME");
-                // TODO: Read from database and set the DefinedBy property to the authenticator.
-                String defaultAuthenticatorDefinedByType = IdentityConstants.DefinedByType.SYSTEM.toString();
+                String defaultAuthenticatorDefinedByType = rs.getString("DEFINED_BY");
                 String defaultProvisioningConnectorConfigName = rs.getString("DEFAULT_PRO_CONNECTOR_NAME");
                 federatedIdp.setIdentityProviderDescription(rs.getString("DESCRIPTION"));
 
@@ -3586,8 +3585,7 @@ public class IdPManagementDAO {
                 String roleClaimUri = rs.getString("ROLE_CLAIM_URI");
 
                 String defaultAuthenticatorName = rs.getString("DEFAULT_AUTHENTICATOR_NAME");
-                // TODO: Read from database and set the DefinedBy property to the authenticator.
-                String defaultAuthenticatorDefinedByType = IdentityConstants.DefinedByType.SYSTEM.toString();
+                String defaultAuthenticatorDefinedByType = rs.getString("DEFINED_BY");
                 String defaultProvisioningConnectorConfigName = rs.getString("DEFAULT_PRO_CONNECTOR_NAME");
                 federatedIdp.setIdentityProviderDescription(rs.getString("DESCRIPTION"));
 
