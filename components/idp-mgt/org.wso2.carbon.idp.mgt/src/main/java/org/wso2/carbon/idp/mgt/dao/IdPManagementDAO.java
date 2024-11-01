@@ -123,16 +123,11 @@ import static org.wso2.carbon.idp.mgt.util.IdPManagementConstants.TEMPLATE_ID_ID
 public class IdPManagementDAO {
 
     private static final Log log = LogFactory.getLog(IdPManagementDAO.class);
-    private SecretsProcessor<IdentityProvider> idpSecretsProcessorService;
+    private IdPSecretsProcessor idpSecretsProcessorService = new IdPSecretsProcessor();;
 
     private static final String OPENID_IDP_ENTITY_ID = "IdPEntityId";
     private static final String ENABLE_SMS_OTP_IF_RECOVERY_NOTIFICATION_ENABLED
             = "OnDemandConfig.OnInitialUse.EnableSMSOTPPasswordRecoveryIfConnectorEnabled";
-    
-    public IdPManagementDAO() {
-
-        idpSecretsProcessorService = new IdPSecretsProcessor();
-    }
 
     /**
      * @param dbConnection
