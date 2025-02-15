@@ -1904,9 +1904,29 @@ public class IdentityProviderManager implements IdpManager {
                 tenantId, tenantDomain);
 
         validateIdPIssuerName(currentIdentityProvider, newIdentityProvider, tenantId, tenantDomain);
+        validateNewAuthenticatorNameWithPUT(currentIdentityProvider.getFederatedAuthenticatorConfigs(),
+                newIdentityProvider.getFederatedAuthenticatorConfigs(), tenantDomain);
         handleMetadata(tenantId, newIdentityProvider);
         resolveAuthenticatorDefinedByProperty(newIdentityProvider, false, tenantDomain);
         dao.updateIdP(newIdentityProvider, currentIdentityProvider, tenantId, tenantDomain);
+    }
+
+    private void validateNewAuthenticatorNameWithPUT(FederatedAuthenticatorConfig[] currentFederatedAuthenticators,
+                          FederatedAuthenticatorConfig[] newFederatedAuthenticator, String tenantDomain)
+            throws IdentityProviderManagementException {
+
+        List<String> authenticatorNamesListInOldIDP = new ArrayList<>();
+        for (FederatedAuthenticatorConfig authenticatorInOldIdp: currentFederatedAuthenticators) {
+            authenticatorNamesListInOldIDP.add(authenticatorInOldIdp.getName());
+        }
+        List<FederatedAuthenticatorConfig> newAuthenticators = new ArrayList<>();
+        for (FederatedAuthenticatorConfig authenticatorInNewIdp: newFederatedAuthenticator) {
+            if (!authenticatorNamesListInOldIDP.contains(authenticatorInNewIdp.getName())) {
+                newAuthenticators.add(authenticatorInNewIdp);
+            }
+        }
+        validateFederatedAuthenticatorConfigName(
+                newAuthenticators.toArray(new FederatedAuthenticatorConfig[0]), tenantDomain);
     }
 
     /**
