@@ -26,7 +26,7 @@ public class APIAuthProperty {
     private final String name;
     private final String value;
 
-    public APIAuthProperty(AuthPropertyBuilder authPropertyBuilder) {
+    public APIAuthProperty(Builder authPropertyBuilder) {
 
         this.name = authPropertyBuilder.name;
         this.value = authPropertyBuilder.value;
@@ -45,21 +45,15 @@ public class APIAuthProperty {
     /**
      * Authentication Property Builder.
      */
-    public static class AuthPropertyBuilder {
+    public static class Builder {
 
-        private String name;
-        private String value;
+        private final String name;
+        private final String value;
 
-        public AuthPropertyBuilder name(String name) {
+        public Builder(String name, String value) {
 
             this.name = name;
-            return this;
-        }
-
-        public AuthPropertyBuilder value(String value) {
-
             this.value = value;
-            return this;
         }
 
         public APIAuthProperty build() {

@@ -93,6 +93,7 @@
                             org.apache.http; version="${httpcore.version.osgi.import.range}",
                             org.apache.http.client.config; version="${httpcore.version.osgi.import.range}",
                             org.apache.http.client.methods; version="${httpcore.version.osgi.import.range}",
+                            org.apache.http.message; version="${httpcore.version.osgi.import.range}",
                             org.apache.http.concurrent; version="${httpcore.version.osgi.import.range}",
                             org.apache.http.conn; version="${httpcore.version.osgi.import.range}",
                             org.apache.http.entity; version="${httpcore.version.osgi.import.range}",

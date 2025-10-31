@@ -18,16 +18,21 @@
 
 package org.wso2.carbon.identity.external.api.token.handler.api.model;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.wso2.carbon.identity.external.api.client.api.model.APIResponse;
+
 /**
  * Model class for Token Response.
  */
-public class TokenResponse {
+public class TokenResponse extends APIResponse {
 
     private final String accessToken;
     private final String refreshToken;
 
     private TokenResponse(Builder builder) {
 
+        super(new APIResponse.Builder(builder.statusCode, builder.responseBody));
         this.accessToken = builder.accessToken;
         this.refreshToken = builder.refreshToken;
     }
@@ -47,26 +52,29 @@ public class TokenResponse {
      */
     public static class Builder {
 
+        private int statusCode;
+        private String responseBody;
         private String accessToken;
         private String refreshToken;
+        private final APIResponse response;
 
-        public Builder(String accessToken, String refreshToken) {
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-        }
+        public Builder(APIResponse response) {
 
-        public Builder setAccessToken(String accessToken) {
-            this.accessToken = accessToken;
-            return this;
-        }
-
-        public Builder setRefreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
-            return this;
+            this.response = response;
         }
 
         public TokenResponse build() {
 
+            statusCode = response.getStatusCode();
+            responseBody = response.getResponseBody();
+            JsonObject jsonObject = JsonParser.parseString(response.getResponseBody()).getAsJsonObject();
+            // null check
+            if (jsonObject.get("access_token") != null) {
+                accessToken = jsonObject.get("access_token").getAsString();
+            }
+            if (jsonObject.get("refresh_token") != null) {
+                refreshToken = jsonObject.get("refresh_token").getAsString();
+            }
             return new TokenResponse(this);
         }
     }

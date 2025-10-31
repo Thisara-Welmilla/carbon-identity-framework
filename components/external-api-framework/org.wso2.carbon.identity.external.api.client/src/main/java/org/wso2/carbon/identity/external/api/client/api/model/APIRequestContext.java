@@ -18,6 +18,8 @@
 
 package org.wso2.carbon.identity.external.api.client.api.model;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -109,6 +111,19 @@ public class APIRequestContext {
 
         public APIRequestContext build() {
 
+            if (httpMethod == null) {
+                throw new IllegalArgumentException("HTTP method must be provided for the API request.");
+            }
+            if (apiAuthentication == null) {
+                throw new IllegalArgumentException("HTTP method must be provided for the API request.");
+            }
+            if (endpointUrl == null || StringUtils.isBlank(endpointUrl)) {
+                throw new IllegalArgumentException("Endpoint URL must be provided for the API request.");
+            }
+            if (payload == null || StringUtils.isBlank(payload)) {
+                throw new IllegalArgumentException("Payload must be provided for the API request.");
+            }
+
             return new APIRequestContext(this);
         }
     }
@@ -118,8 +133,7 @@ public class APIRequestContext {
      */
     public enum HttpMethod {
 
-        POST("post"),
-        GET("get");
+        POST("post");
 
         private final String name;
 

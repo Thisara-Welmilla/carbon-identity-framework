@@ -1,7 +1,9 @@
 package org.wso2.carbon.identity.external.api.token.handler.api.model;
 
+import org.wso2.carbon.identity.external.api.client.api.exception.APIClientRequestException;
 import org.wso2.carbon.identity.external.api.client.api.model.APIAuthentication;
 import org.wso2.carbon.identity.external.api.client.api.model.APIRequestContext;
+import org.wso2.carbon.identity.external.api.token.handler.internal.util.TokenRequestBuilderUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,22 +13,22 @@ import java.util.Map;
  */
 public class TokenRequestContext {
 
-    private final APIAuthentication apiAuthentication;
+    private final GrantContext grantContext;
     private final String tokenEndpointUrl;
     private final Map<String, String> headers;
-    private final String payload;
+    private String payload;
 
     public TokenRequestContext(TokenRequestContext.Builder builder) {
 
-        this.apiAuthentication = builder.apiAuthentication;
+        this.grantContext = builder.grantContext;
         this.tokenEndpointUrl = builder.endpointUrl;
         this.headers = builder.headers;
         this.payload = builder.payload;
     }
 
-    public APIAuthentication getApiAuthentication() {
+    public GrantContext getGrantContext() {
 
-        return apiAuthentication;
+        return grantContext;
     }
 
     public String getTokenEndpointUrl() {
@@ -39,9 +41,9 @@ public class TokenRequestContext {
         return headers;
     }
 
-    public String setPayLoad() {
+    public void setPayLoad(String payload) {
 
-        return payload;
+        this.payload = payload;
     }
 
     public String getPayLoad() {
@@ -49,14 +51,17 @@ public class TokenRequestContext {
         return payload;
     }
 
-    public APIRequestContext build(TokenRequestContext tokenRequestContext) {
+    public APIRequestContext buildAPIRequestContext() throws APIClientRequestException {
 
+        // if payload null
+        APIAuthentication authentication = TokenRequestBuilderUtils.buildTokenRequestAPIAuthentication(this);
+        String payload = TokenRequestBuilderUtils.buildTokenRequestPayload(this);
         APIRequestContext.Builder requestContextBuilder = new APIRequestContext.Builder()
                 .setHttpMethod(APIRequestContext.HttpMethod.POST)
-                .setHeaders(tokenRequestContext.getHeaders())
-                .setEndpointUrl(tokenRequestContext.getTokenEndpointUrl())
-                .setApiAuthentication(tokenRequestContext.getApiAuthentication())
-                .setPayload(tokenRequestContext.getPayLoad());
+                .setHeaders(headers)
+                .setEndpointUrl(tokenEndpointUrl)
+                .setApiAuthentication(authentication)
+                .setPayload(payload);
 
         return requestContextBuilder.build();
     }
@@ -66,30 +71,30 @@ public class TokenRequestContext {
      */
     public static class Builder {
 
-        private APIAuthentication apiAuthentication;
+        private GrantContext grantContext;
         private String endpointUrl;
         private Map<String, String> headers = new HashMap<>();
         private String payload;
 
-        public TokenRequestContext.Builder apiAuthentication(APIAuthentication apiAuthentication) {
+        public Builder grantContext(GrantContext grantContext) {
 
-            this.apiAuthentication = apiAuthentication;
+            this.grantContext = grantContext;
             return this;
         }
 
-        public TokenRequestContext.Builder endpointUrl(String endpointUrl) {
+        public Builder endpointUrl(String endpointUrl) {
 
             this.endpointUrl = endpointUrl;
             return this;
         }
 
-        public TokenRequestContext.Builder headers(Map<String, String> headers) {
+        public Builder headers(Map<String, String> headers) {
 
             this.headers = headers;
             return this;
         }
 
-        public TokenRequestContext.Builder payload(String payload) {
+        public Builder payload(String payload) {
 
             this.payload = payload;
             return this;
@@ -97,6 +102,7 @@ public class TokenRequestContext {
 
         public TokenRequestContext build() {
 
+            // do validations
             return new TokenRequestContext(this);
         }
     }

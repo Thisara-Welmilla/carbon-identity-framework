@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.external.api.client.api.service;
 
 import org.wso2.carbon.identity.external.api.client.api.exception.APIClientInvocationException;
 import org.wso2.carbon.identity.external.api.client.api.model.APIClientConfig;
+import org.wso2.carbon.identity.external.api.client.api.model.APIInvocationConfig;
 import org.wso2.carbon.identity.external.api.client.api.model.APIRequestContext;
 import org.wso2.carbon.identity.external.api.client.api.model.APIResponse;
 
@@ -37,19 +38,12 @@ public abstract class AbstractAPIClientManger {
         this.apiClient = new APIClient(this.apiClientConfig);
     }
 
-    public APIResponse callAPI(APIRequestContext requestContext)
+    public APIResponse callAPI(APIRequestContext requestContext, APIInvocationConfig apiInvocationConfig)
             throws APIClientInvocationException {
 
-        APIResponse response = apiClient.callAPI(requestContext);
-        while (isRetry(response)) {
-            try {
-                response = apiClient.callAPI(requestContext);
-            } catch (APIClientInvocationException e) {
-                throw new APIClientInvocationException("Error while invoking the API: " + e.getMessage(), e);
-            }
-        }
-        return response;
+        APIResponse response = apiClient.callAPI(requestContext, apiInvocationConfig);
+        return handleResponse(response);
     }
 
-    protected abstract boolean isRetry(APIResponse response);
+    protected abstract APIResponse handleResponse(APIResponse response);
 }

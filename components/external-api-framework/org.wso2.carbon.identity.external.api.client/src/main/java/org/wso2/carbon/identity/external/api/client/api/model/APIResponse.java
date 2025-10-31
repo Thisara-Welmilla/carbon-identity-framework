@@ -27,15 +27,18 @@ public class APIResponse {
     private final String responseBody;
 
     public APIResponse(Builder builder) {
+
         this.statusCode = builder.statusCode;
         this.responseBody = builder.responseBody;
     }
 
     public int getStatusCode() {
+
         return statusCode;
     }
 
     public String getResponseBody() {
+
         return responseBody;
     }
 
@@ -43,20 +46,30 @@ public class APIResponse {
      * Builder class for APIResponse.
      */
     public static class Builder {
+
         private int statusCode;
         private String responseBody;
 
+        public Builder(int statusCode, String responseBody) {
+
+            this.statusCode = statusCode;
+            this.responseBody = responseBody;
+        }
+
         public Builder setStatusCode(int statusCode) {
+
             this.statusCode = statusCode;
             return this;
         }
 
         public Builder setResponseBody(String responseBody) {
+
             this.responseBody = responseBody;
             return this;
         }
 
         public APIResponse build() {
+
             return new APIResponse(this);
         }
     }

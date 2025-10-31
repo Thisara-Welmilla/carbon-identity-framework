@@ -33,10 +33,11 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.wso2.carbon.identity.external.api.client.api.exception.APIClientInvocationException;
-import org.wso2.carbon.identity.external.api.client.api.model.APIAuthentication;
 import org.wso2.carbon.identity.external.api.client.api.model.APIClientConfig;
+import org.wso2.carbon.identity.external.api.client.api.model.APIInvocationConfig;
 import org.wso2.carbon.identity.external.api.client.api.model.APIRequestContext;
 import org.wso2.carbon.identity.external.api.client.api.model.APIResponse;
+import org.wso2.carbon.identity.external.api.client.internal.util.APIRequestBuildingUtils;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -82,9 +83,11 @@ public class APIClient {
      * @return APIResponse containing the response from the API call.
      * @throws APIClientInvocationException if an error occurs during the API call.
      */
-    public APIResponse callAPI(APIRequestContext requestContext) throws APIClientInvocationException {
+    public APIResponse callAPI(APIRequestContext requestContext, APIInvocationConfig apiInvocationConfig)
+            throws APIClientInvocationException {
 
         HttpEntityEnclosingRequestBase httpEntityEnclosingRequestBase;
+        // may be this part also to utils?
         switch (requestContext.getHttpMethod()) {
             case POST:
                 httpEntityEnclosingRequestBase = new HttpPost(requestContext.getEndpointUrl());
@@ -93,28 +96,27 @@ public class APIClient {
                 throw new APIClientInvocationException("HTTP Method: " + requestContext.getHttpMethod()
                         + " is not supported.");
         }
-        String authenticationHeader = buildAuthenticationHeader(requestContext.getApiAuthentication());
-        setRequestEntity(httpEntityEnclosingRequestBase, requestContext, authenticationHeader);
-        return executeRequest(httpEntityEnclosingRequestBase);
+        setRequestEntity(httpEntityEnclosingRequestBase, requestContext);
+        return executeRequest(httpEntityEnclosingRequestBase, apiInvocationConfig);
     }
 
-    private void setRequestEntity(HttpEntityEnclosingRequestBase httpPost, APIRequestContext requestContext,
-                                  String authenticationHeader) {
+    private void setRequestEntity(HttpEntityEnclosingRequestBase httpRequestBase, APIRequestContext requestContext) {
 
         StringEntity entity = new StringEntity(requestContext.getPayload(), StandardCharsets.UTF_8);
-        httpPost.setEntity(entity);
+        httpRequestBase.setEntity(entity);
 
-        httpPost.setHeader("Accept", "application/json");
-        httpPost.setHeader("Content-type", "application/json");
-        if (authenticationHeader != null) {
-            httpPost.setHeader("Authorization", authenticationHeader);
-        }
+        httpRequestBase.setHeader("Accept", "application/json");
+        httpRequestBase.setHeader("Content-type", "application/json");
+        httpRequestBase.setHeader(
+                APIRequestBuildingUtils.buildAuthenticationHeader(requestContext.getApiAuthentication()));
         for (Map.Entry<String, String> header : requestContext.getHeaders().entrySet()) {
-            httpPost.setHeader(header.getKey(), header.getValue());
+            httpRequestBase.setHeader(header.getKey(), header.getValue());
         }
     }
 
-    private APIResponse executeRequest(HttpEntityEnclosingRequestBase request) throws APIClientInvocationException {
+    // keep retry count
+    private APIResponse executeRequest(HttpEntityEnclosingRequestBase request, APIInvocationConfig apiInvocationConfig)
+            throws APIClientInvocationException {
 
         try (CloseableHttpResponse response = httpClient.execute(request)) {
             return handleResponse(response);
@@ -133,25 +135,8 @@ public class APIClient {
         int statusCode = response.getStatusLine().getStatusCode();
         HttpEntity responseEntity = response.getEntity();
 
-        APIResponse.Builder apiResponseBuilder = new APIResponse.Builder();
-        apiResponseBuilder.setStatusCode(statusCode);
-        apiResponseBuilder.setResponseBody(EntityUtils.toString((responseEntity)));
-
+        APIResponse.Builder apiResponseBuilder = new APIResponse
+                .Builder(statusCode, EntityUtils.toString((responseEntity)));
         return apiResponseBuilder.build();
-    }
-
-    private String buildAuthenticationHeader(APIAuthentication apiAuthentication) {
-
-        switch (apiAuthentication.getType()) {
-            case BASIC:
-                String credentials = apiAuthentication.getProperties().get(0) + ":" +
-                        apiAuthentication.getProperties().get(0);
-                byte[] encodedBytes = java.util.Base64.getEncoder()
-                        .encode(credentials.getBytes(StandardCharsets.UTF_8));
-                return "Basic " + new String(encodedBytes, StandardCharsets.UTF_8);
-            default:
-                LOG.warn("Unsupported authentication type: " + apiAuthentication.getType());
-                return null;
-        }
     }
 }

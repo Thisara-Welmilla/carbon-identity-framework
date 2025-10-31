@@ -19,41 +19,30 @@
 package org.wso2.carbon.identity.external.api.client.api.model;
 
 import org.apache.commons.lang.StringUtils;
+import org.wso2.carbon.identity.external.api.client.api.exception.APIClientRequestException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * Authentication class which hold supported authentication types and their properties.
  */
 public class APIAuthentication {
 
-    private final Type type;
-    private List<APIAuthProperty> properties = null;
+    private final AuthType authType;
+    private final List<APIAuthProperty> properties;
 
-    public APIAuthentication(BasicAuthBuilder basicAuthBuilder) {
 
-        this.type = basicAuthBuilder.type;
-        this.properties = basicAuthBuilder.properties;
+    public APIAuthentication(Builder builder) throws APIClientRequestException {
+
+        this.authType = builder.authType;
+        this.properties = builder.properties;
     }
 
-    public APIAuthentication(BearerAuthBuilder bearerAuthBuilder) {
+    public AuthType getType() {
 
-        this.type = bearerAuthBuilder.type;
-        this.properties = bearerAuthBuilder.properties;
-    }
-
-    public APIAuthentication(NoneAuthBuilder noneAuthBuilder) {
-
-        this.type = noneAuthBuilder.type;
-        this.properties = noneAuthBuilder.properties;
-    }
-
-    public Type getType() {
-
-        return type;
+        return authType;
     }
 
     public List<APIAuthProperty> getProperties() {
@@ -70,145 +59,85 @@ public class APIAuthentication {
     }
 
     /**
-     * Basic Authentication builder.
+     * Builder class for APIAuthentication.
      */
-    public static class BasicAuthBuilder {
+    public static class Builder {
 
-        private final Type type;
-        private final List<APIAuthProperty> properties = new ArrayList<>();
-
-        public BasicAuthBuilder(String username, String password) {
-            this.type = Type.BASIC;
-            this.properties.add(new APIAuthProperty.AuthPropertyBuilder()
-                    .name(Property.USERNAME.getName()).value(username).build());
-            this.properties.add(new APIAuthProperty.AuthPropertyBuilder()
-                    .name(Property.PASSWORD.getName()).value(password).build());
-        }
-
-        public APIAuthentication build() {
-
-            return new APIAuthentication(this);
-        }
-    }
-
-    /**
-     * Bearer Authentication builder.
-     */
-    public static class BearerAuthBuilder {
-
-        private final Type type;
-        private final List<APIAuthProperty> properties = new ArrayList<>();
-
-        public BearerAuthBuilder(String accessToken) {
-            this.type = Type.BEARER;
-            this.properties.add(new APIAuthProperty.AuthPropertyBuilder()
-                    .name(Property.ACCESS_TOKEN.getName()).value(accessToken).build());
-        }
-
-        public APIAuthentication build() {
-
-            return new APIAuthentication(this);
-        }
-    }
-
-    /**
-     * None Authentication builder.
-     */
-    public static class NoneAuthBuilder {
-
-        private final Type type;
-        private final List<APIAuthProperty> properties = new ArrayList<>();
-
-        public NoneAuthBuilder() {
-
-            this.type = Type.NONE;
-        }
-
-        public APIAuthentication build() {
-
-            return new APIAuthentication(this);
-        }
-    }
-
-    /**
-     * This builder build endpoint by taking the authentication type and properties as input.
-     */
-    public static class AuthenticationBuilder {
-
-        private Type authType;
+        private AuthType authType;
         private Map<String, String> authPropertiesMap;
+        private final List<APIAuthProperty> properties = new ArrayList<>();
 
-        public AuthenticationBuilder type(Type type) {
+        public Builder authType(AuthType authType) {
 
-            this.authType = type;
+            this.authType = authType;
             return this;
         }
 
-        public AuthenticationBuilder properties(Map<String, String> authPropertiesMap) {
+        public Builder properties(Map<String, String> authPropertiesMap) {
 
             this.authPropertiesMap = authPropertiesMap;
             return this;
         }
 
-        public APIAuthentication build() {
+        public APIAuthentication build() throws APIClientRequestException {
 
             if (authType == null) {
-                throw new IllegalArgumentException("Authentication type must be provided for the authentication " +
-                        "configuration of the endpoint.");
+                throw new APIClientRequestException("Authentication authType must be provided for the authentication " +
+                        "configuration.");
             }
+
             switch (authType) {
                 case BASIC:
-                    return new APIAuthentication.BasicAuthBuilder(
-                            getProperty(Type.BASIC, authPropertiesMap, Property.USERNAME.getName()),
-                            getProperty(Type.BASIC, authPropertiesMap, Property.PASSWORD.getName())).build();
+                    properties.add(buildAuthProperty(AuthType.BASIC, Property.USERNAME.getName()));
+                    properties.add(buildAuthProperty(AuthType.BASIC, Property.PASSWORD.getName()));
+                    break;
                 case BEARER:
-                    return new APIAuthentication.BearerAuthBuilder(
-                            getProperty(Type.BEARER, authPropertiesMap, Property.ACCESS_TOKEN.getName())).build();
+                    properties.add(buildAuthProperty(AuthType.BEARER, Property.ACCESS_TOKEN.getName()));
+                    break;
+                case API_KEY:
+                    properties.add(buildAuthProperty(AuthType.API_KEY, Property.HEADER.getName()));
+                    properties.add(buildAuthProperty(AuthType.API_KEY, Property.VALUE.getName()));
+                    break;
                 case NONE:
-                    return new APIAuthentication.NoneAuthBuilder().build();
+                    break;
                 default:
-                    throw new IllegalArgumentException(String.format("An invalid authentication type '%s' is " +
+                    throw new APIClientRequestException(String.format("An invalid authentication authType '%s' is " +
                             "provided for the authentication configuration of the endpoint.", authType.name()));
             }
+            return new APIAuthentication(this);
         }
 
-        private String getProperty(APIAuthentication.Type authType,  Map<String, String> actionEndpointProperties,
-                                   String propertyName) {
+        private APIAuthProperty buildAuthProperty(AuthType authType, String propertyName)
+                throws APIClientRequestException {
 
-            if (actionEndpointProperties != null && actionEndpointProperties.containsKey(propertyName)) {
-                String propValue = actionEndpointProperties.get(propertyName);
+            if (authPropertiesMap != null && authPropertiesMap.containsKey(propertyName)) {
+                String propValue = authPropertiesMap.get(propertyName);
                 if (StringUtils.isNotBlank(propValue)) {
-                    return propValue;
+                    return new APIAuthProperty.Builder(propertyName, propValue).build();
                 }
-                throw new IllegalArgumentException(String.format("The Property %s cannot be blank.", propertyName));
+                throw new APIClientRequestException(String.format("The Property %s cannot be blank.", propertyName));
             }
 
-            throw new NoSuchElementException(String.format("The property %s must be provided as an authentication " +
-                    "property for the %s authentication type.", propertyName, authType.name()));
+            throw new APIClientRequestException(String.format("The property %s must be provided as an authentication " +
+                    "property for the %s authentication authType.", propertyName, authType.name()));
         }
     }
 
     /**
-     * Authentication Type.
+     * Authentication AuthType.
      */
-    public enum Type {
+    public enum AuthType {
 
-        NONE("none", "NONE"),
-        BEARER("bearer", "BEARER"),
-        BASIC("basic", "BASIC");
+        NONE("NONE"),
+        BEARER("BEARER"),
+        BASIC("BASIC"),
+        API_KEY("API_KEY");
 
-        private final String pathParam;
         private final String name;
 
-        Type(String pathParam, String name) {
+        AuthType(String name) {
 
-            this.pathParam = pathParam;
             this.name = name;
-        }
-
-        public String getPathParam() {
-
-            return pathParam;
         }
 
         public String getName() {
@@ -216,18 +145,18 @@ public class APIAuthentication {
             return name;
         }
 
-        public static Type valueOfName(String name) {
+        public static AuthType valueOfName(String name) {
 
             if (name == null || name.isEmpty()) {
-                throw new IllegalArgumentException("Authentication type cannot be null or empty.");
+                throw new IllegalArgumentException("Authentication authType cannot be null or empty.");
             }
 
-            for (Type type : Type.values()) {
-                if (type.name.equalsIgnoreCase(name)) {
-                    return type;
+            for (AuthType authType : AuthType.values()) {
+                if (authType.name.equalsIgnoreCase(name)) {
+                    return authType;
                 }
             }
-            throw new IllegalArgumentException("Invalid authentication type: " + name);
+            throw new IllegalArgumentException("Invalid authentication authType: " + name);
         }
     }
 
@@ -238,6 +167,8 @@ public class APIAuthentication {
 
         USERNAME("username"),
         PASSWORD("password"),
+        HEADER("header"),
+        VALUE("value"),
         ACCESS_TOKEN("accessToken");
 
         private final String name;

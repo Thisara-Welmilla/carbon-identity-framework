@@ -68,9 +68,11 @@ public class APIClientConfig {
      */
     public static class Builder {
 
+        // set default values from configs
         protected int httpReadTimeoutInMillis = 10000;
         protected int httpConnectionRequestTimeoutInMillis = 10000;
         protected int httpConnectionTimeoutInMillis = 10000;
+        // remove retry count from here and add to api request context with default va;ue
         protected int httpRequestRetryCount = 0;
         protected int poolSizeToBeSet = 100;
 

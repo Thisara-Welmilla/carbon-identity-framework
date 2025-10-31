@@ -19,7 +19,9 @@
 package org.wso2.carbon.identity.external.api.token.handler.api;
 
 import org.wso2.carbon.identity.external.api.client.api.exception.APIClientInvocationException;
+import org.wso2.carbon.identity.external.api.client.api.exception.APIClientRequestException;
 import org.wso2.carbon.identity.external.api.client.api.model.APIClientConfig;
+import org.wso2.carbon.identity.external.api.client.api.model.APIInvocationConfig;
 import org.wso2.carbon.identity.external.api.client.api.model.APIRequestContext;
 import org.wso2.carbon.identity.external.api.client.api.model.APIResponse;
 import org.wso2.carbon.identity.external.api.client.api.service.AbstractAPIClientManger;
@@ -32,24 +34,21 @@ import org.wso2.carbon.identity.external.api.token.handler.api.model.TokenRespon
 public class TokenAcquirerService extends AbstractAPIClientManger {
 
     TokenRequestContext tokenRequestContext;
+    APIInvocationConfig apiInvocationConfig = new APIInvocationConfig();
 
-    /**
-     * Constructor for TokenAcquirerService.
-     *
-     * @param apiClientConfig API Client Configuration.
-     */
     public TokenAcquirerService(APIClientConfig apiClientConfig) {
+
         super(apiClientConfig);
     }
 
-    /**
-     * Set the token request context.
-     *
-     * @param tokenRequestContext Token request context.
-     */
     public void setTokenRequestContext(TokenRequestContext tokenRequestContext) {
 
         this.tokenRequestContext = tokenRequestContext;
+    }
+
+    public void setApiInvocationConfig(APIInvocationConfig apiInvocationConfig) {
+
+        this.apiInvocationConfig = apiInvocationConfig;
     }
 
     /**
@@ -57,32 +56,22 @@ public class TokenAcquirerService extends AbstractAPIClientManger {
      *
      * @return Token response.
      */
-    public TokenResponse getToken() throws APIClientInvocationException {
+    public TokenResponse getNewAccessToken() throws APIClientInvocationException, APIClientRequestException {
 
-        APIRequestContext apiRequestContext = buildAPIRequestContext(tokenRequestContext);
-        APIResponse response = callAPI(apiRequestContext);
-        return convertToTokenResponse(response);
+        APIRequestContext apiRequestContext = tokenRequestContext.buildAPIRequestContext();
+        return (TokenResponse) callAPI(apiRequestContext, apiInvocationConfig);
+    }
+
+    public TokenResponse getNewAccessTokenFromRefreshGrant()
+            throws APIClientInvocationException, APIClientRequestException {
+
+        APIRequestContext apiRequestContext = tokenRequestContext.buildAPIRequestContext();
+        return (TokenResponse) callAPI(apiRequestContext, apiInvocationConfig);
     }
 
     @Override
-    protected boolean isRetry(APIResponse response) {
-        return false;
-    }
+    protected APIResponse handleResponse(APIResponse response) {
 
-    private TokenResponse convertToTokenResponse(APIResponse response) {
-
-        return new TokenResponse.Builder("dqdqw", "dqwdqw").build();
-    }
-
-    private APIRequestContext buildAPIRequestContext(TokenRequestContext tokenRequestContext) {
-
-        APIRequestContext.Builder requestContextBuilder = new APIRequestContext.Builder()
-                .setHttpMethod(APIRequestContext.HttpMethod.POST)
-                .setHeaders(tokenRequestContext.getHeaders())
-                .setEndpointUrl(tokenRequestContext.getTokenEndpointUrl())
-                .setApiAuthentication(tokenRequestContext.getApiAuthentication())
-                .setPayload(tokenRequestContext.getPayLoad());
-
-        return requestContextBuilder.build();
+        return new TokenResponse.Builder(response).build();
     }
 }
