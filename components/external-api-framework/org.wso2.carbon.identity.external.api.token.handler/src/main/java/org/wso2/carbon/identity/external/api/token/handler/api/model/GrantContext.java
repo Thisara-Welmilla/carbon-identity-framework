@@ -1,6 +1,25 @@
+/*
+ * Copyright (c) 2025, WSO2 LLC. (http://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.carbon.identity.external.api.token.handler.api.model;
 
 import org.apache.commons.lang.StringUtils;
+import org.wso2.carbon.identity.external.api.token.handler.api.exception.TokenHandlerException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +44,9 @@ public class GrantContext {
         return grantType;
     }
 
-    public Map<String, String> getProperties() {
+    public String getProperty(String propertyName) {
 
-        return properties;
+        return properties.get(propertyName);
     }
 
     /**
@@ -36,8 +55,8 @@ public class GrantContext {
     public static class Builder {
 
         private GrantType grantType;
-        private Map<String, String> propertiesMap = new HashMap<>();
-        private Map<String, String> resolvedGrantProperties = new HashMap<>();
+        private Map<String, String> propertyMap = new HashMap<>();
+        private final Map<String, String> resolvedGrantProperties = new HashMap<>();
 
         public Builder grantType(GrantType grantType) {
 
@@ -47,21 +66,24 @@ public class GrantContext {
 
         public Builder properties(Map<String, String> properties) {
 
-            this.propertiesMap = properties;
+            this.propertyMap = properties;
             return this;
         }
 
-        public GrantContext build() {
+        public GrantContext build() throws TokenHandlerException {
 
-            resolvedGrantProperties = new HashMap<>();
+            if (grantType == null) {
+                throw new TokenHandlerException("Authentication authType must be provided for the authentication " +
+                        "configuration.");
+            }
+
             switch (grantType) {
-                case CLIENT_CREDENTIALS:
-                    resolvedGrantProperties.put(Property.CLIENT_ID.getName(),
-                            getProperty(Type.CLIENT_CRED, propertiesMap, Property.CLIENT_ID.getName()));
-                    resolvedGrantProperties.put(Property.CLIENT_SECRET.getName(),
-                            getProperty(Type.CLIENT_CRED, propertiesMap, Property.CLIENT_SECRET.getName()));
-                    resolvedGrantProperties.put(Property.SCOPE.getName(),
-                            getProperty(Type.CLIENT_CRED, propertiesMap, Property.SCOPE.getName()));
+                case CLIENT_CREDENTIAL:
+                    resolvedGrantProperties.put(
+                            Property.CLIENT_ID.getName(), getProperty(Property.CLIENT_ID.getName()));
+                    resolvedGrantProperties.put(
+                            Property.CLIENT_SECRET.getName(), getProperty(Property.CLIENT_SECRET.getName()));
+                    resolvedGrantProperties.put(Property.SCOPE.getName(), getProperty(Property.SCOPE.getName()));
                     break;
                 default:
                     throw new IllegalArgumentException(String.format("An invalid authentication type '%s' is " +
@@ -70,53 +92,18 @@ public class GrantContext {
             return new GrantContext(this);
         }
 
-        private String getProperty(Type authType, Map<String, String> actionEndpointProperties,
-                                   String propertyName) {
+        private String getProperty(String propertyName) {
 
-            if (actionEndpointProperties != null && actionEndpointProperties.containsKey(propertyName)) {
-                String propValue = actionEndpointProperties.get(propertyName);
+            if (propertyMap != null && propertyMap.containsKey(propertyName)) {
+                String propValue = propertyMap.get(propertyName);
                 if (StringUtils.isNotBlank(propValue)) {
                     return propValue;
                 }
                 throw new IllegalArgumentException(String.format("The Property %s cannot be blank.", propertyName));
             }
 
-            throw new NoSuchElementException(String.format("The property %s must be provided as an authentication " +
-                    "property for the %s authentication type.", propertyName, authType.name()));
-        }
-    }
-
-    /**
-     * Authentication Type.
-     */
-    public enum Type {
-
-        CLIENT_CRED("CLIENT_CREDENTIAL");
-
-        private final String name;
-
-        Type(String name) {
-
-            this.name = name;
-        }
-
-        public String getName() {
-
-            return name;
-        }
-
-        public static Type valueOfName(String name) {
-
-            if (name == null || name.isEmpty()) {
-                throw new IllegalArgumentException("Authentication type cannot be null or empty.");
-            }
-
-            for (Type type : Type.values()) {
-                if (type.name.equalsIgnoreCase(name)) {
-                    return type;
-                }
-            }
-            throw new IllegalArgumentException("Invalid authentication type: " + name);
+            throw new NoSuchElementException(String.format("The property %s must be provided as a property for the " +
+                    "%s grant type.", propertyName, grantType));
         }
     }
 
@@ -125,7 +112,7 @@ public class GrantContext {
      */
     public enum GrantType {
 
-        CLIENT_CREDENTIALS
+        CLIENT_CREDENTIAL
     }
 
     /**

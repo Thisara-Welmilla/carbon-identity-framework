@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.external.api.client.api.exception;
 /**
  * Exception class for API Client invocation related exceptions.
  */
-public class APIClientInvocationException extends Exception {
+public class APIClientInvocationException extends APIClientException {
 
     public APIClientInvocationException(String message) {
 

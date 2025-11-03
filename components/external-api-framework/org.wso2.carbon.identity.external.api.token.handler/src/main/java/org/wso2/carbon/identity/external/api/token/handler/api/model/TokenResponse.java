@@ -68,7 +68,8 @@ public class TokenResponse extends APIResponse {
             statusCode = response.getStatusCode();
             responseBody = response.getResponseBody();
             JsonObject jsonObject = JsonParser.parseString(response.getResponseBody()).getAsJsonObject();
-            // null check
+
+            // rewrite
             if (jsonObject.get("access_token") != null) {
                 accessToken = jsonObject.get("access_token").getAsString();
             }

@@ -115,11 +115,14 @@ public class APIRequestContext {
                 throw new IllegalArgumentException("HTTP method must be provided for the API request.");
             }
             if (apiAuthentication == null) {
-                throw new IllegalArgumentException("HTTP method must be provided for the API request.");
+                throw new IllegalArgumentException("API authentication must be provided for the API request.");
             }
             if (endpointUrl == null || StringUtils.isBlank(endpointUrl)) {
                 throw new IllegalArgumentException("Endpoint URL must be provided for the API request.");
             }
+            /* Todo: Payload can be optional for certain HTTP methods like GET.
+                     Adjust validation accordingly when introducing new HTTP Method supports
+             */
             if (payload == null || StringUtils.isBlank(payload)) {
                 throw new IllegalArgumentException("Payload must be provided for the API request.");
             }

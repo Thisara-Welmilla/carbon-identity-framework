@@ -18,11 +18,13 @@
 
 package org.wso2.carbon.identity.external.api.client.api.service;
 
-import org.wso2.carbon.identity.external.api.client.api.exception.APIClientInvocationException;
+import org.wso2.carbon.identity.external.api.client.api.exception.APIClientException;
+import org.wso2.carbon.identity.external.api.client.api.exception.APIClientResponseException;
 import org.wso2.carbon.identity.external.api.client.api.model.APIClientConfig;
 import org.wso2.carbon.identity.external.api.client.api.model.APIInvocationConfig;
 import org.wso2.carbon.identity.external.api.client.api.model.APIRequestContext;
 import org.wso2.carbon.identity.external.api.client.api.model.APIResponse;
+import org.wso2.carbon.identity.external.api.client.internal.service.APIClient;
 
 /**
  * Abstract class for API Client Manager implementations.
@@ -39,11 +41,11 @@ public abstract class AbstractAPIClientManger {
     }
 
     public APIResponse callAPI(APIRequestContext requestContext, APIInvocationConfig apiInvocationConfig)
-            throws APIClientInvocationException {
+            throws APIClientException {
 
         APIResponse response = apiClient.callAPI(requestContext, apiInvocationConfig);
         return handleResponse(response);
     }
 
-    protected abstract APIResponse handleResponse(APIResponse response);
+    protected abstract APIResponse handleResponse(APIResponse response) throws APIClientResponseException;
 }

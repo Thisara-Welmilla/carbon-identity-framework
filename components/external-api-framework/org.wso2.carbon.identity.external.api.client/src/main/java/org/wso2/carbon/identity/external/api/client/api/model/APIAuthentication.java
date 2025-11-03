@@ -22,22 +22,22 @@ import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.external.api.client.api.exception.APIClientRequestException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Authentication class which hold supported authentication types and their properties.
+ * Authentication class which hold supported authentication types and their resolvedAuthProperties.
  */
 public class APIAuthentication {
 
     private final AuthType authType;
     private final List<APIAuthProperty> properties;
 
-
-    public APIAuthentication(Builder builder) throws APIClientRequestException {
+    public APIAuthentication(Builder builder) {
 
         this.authType = builder.authType;
-        this.properties = builder.properties;
+        this.properties = builder.resolvedAuthProperties;
     }
 
     public AuthType getType() {
@@ -64,8 +64,8 @@ public class APIAuthentication {
     public static class Builder {
 
         private AuthType authType;
-        private Map<String, String> authPropertiesMap;
-        private final List<APIAuthProperty> properties = new ArrayList<>();
+        private Map<String, String> authPropertiesMap = new HashMap<>();
+        private final List<APIAuthProperty> resolvedAuthProperties = new ArrayList<>();
 
         public Builder authType(AuthType authType) {
 
@@ -88,27 +88,26 @@ public class APIAuthentication {
 
             switch (authType) {
                 case BASIC:
-                    properties.add(buildAuthProperty(AuthType.BASIC, Property.USERNAME.getName()));
-                    properties.add(buildAuthProperty(AuthType.BASIC, Property.PASSWORD.getName()));
+                    resolvedAuthProperties.add(buildAuthProperty(Property.USERNAME.getName()));
+                    resolvedAuthProperties.add(buildAuthProperty(Property.PASSWORD.getName()));
                     break;
                 case BEARER:
-                    properties.add(buildAuthProperty(AuthType.BEARER, Property.ACCESS_TOKEN.getName()));
+                    resolvedAuthProperties.add(buildAuthProperty(Property.ACCESS_TOKEN.getName()));
                     break;
                 case API_KEY:
-                    properties.add(buildAuthProperty(AuthType.API_KEY, Property.HEADER.getName()));
-                    properties.add(buildAuthProperty(AuthType.API_KEY, Property.VALUE.getName()));
+                    resolvedAuthProperties.add(buildAuthProperty(Property.HEADER.getName()));
+                    resolvedAuthProperties.add(buildAuthProperty(Property.VALUE.getName()));
                     break;
                 case NONE:
                     break;
                 default:
                     throw new APIClientRequestException(String.format("An invalid authentication authType '%s' is " +
-                            "provided for the authentication configuration of the endpoint.", authType.name()));
+                            "provided.", authType.name()));
             }
             return new APIAuthentication(this);
         }
 
-        private APIAuthProperty buildAuthProperty(AuthType authType, String propertyName)
-                throws APIClientRequestException {
+        private APIAuthProperty buildAuthProperty(String propertyName) throws APIClientRequestException {
 
             if (authPropertiesMap != null && authPropertiesMap.containsKey(propertyName)) {
                 String propValue = authPropertiesMap.get(propertyName);
@@ -119,7 +118,7 @@ public class APIAuthentication {
             }
 
             throw new APIClientRequestException(String.format("The property %s must be provided as an authentication " +
-                    "property for the %s authentication authType.", propertyName, authType.name()));
+                    "property for the authentication authType.", propertyName));
         }
     }
 
@@ -143,20 +142,6 @@ public class APIAuthentication {
         public String getName() {
 
             return name;
-        }
-
-        public static AuthType valueOfName(String name) {
-
-            if (name == null || name.isEmpty()) {
-                throw new IllegalArgumentException("Authentication authType cannot be null or empty.");
-            }
-
-            for (AuthType authType : AuthType.values()) {
-                if (authType.name.equalsIgnoreCase(name)) {
-                    return authType;
-                }
-            }
-            throw new IllegalArgumentException("Invalid authentication authType: " + name);
         }
     }
 

@@ -18,6 +18,8 @@
 
 package org.wso2.carbon.identity.external.api.client.api.model;
 
+import org.wso2.carbon.identity.external.api.client.internal.util.APIClientUtils;
+
 /**
  * Model class for API Client Configuration.
  */
@@ -26,7 +28,6 @@ public class APIClientConfig {
     protected int httpReadTimeoutInMillis;
     protected int httpConnectionRequestTimeoutInMillis;
     protected int httpConnectionTimeoutInMillis;
-    protected int httpRequestRetryCount;
     protected int poolSizeToBeSet;
 
     public APIClientConfig(Builder builder) {
@@ -34,7 +35,6 @@ public class APIClientConfig {
         this.httpReadTimeoutInMillis = builder.httpReadTimeoutInMillis;
         this.httpConnectionRequestTimeoutInMillis = builder.httpConnectionRequestTimeoutInMillis;
         this.httpConnectionTimeoutInMillis = builder.httpConnectionTimeoutInMillis;
-        this.httpRequestRetryCount = builder.httpRequestRetryCount;
         this.poolSizeToBeSet = builder.poolSizeToBeSet;
     }
 
@@ -53,11 +53,6 @@ public class APIClientConfig {
         return httpConnectionTimeoutInMillis;
     }
 
-    public int getHttpRequestRetryCount() {
-
-        return httpRequestRetryCount;
-    }
-
     public int getPoolSizeToBeSet() {
 
         return poolSizeToBeSet;
@@ -68,13 +63,11 @@ public class APIClientConfig {
      */
     public static class Builder {
 
-        // set default values from configs
-        protected int httpReadTimeoutInMillis = 10000;
-        protected int httpConnectionRequestTimeoutInMillis = 10000;
-        protected int httpConnectionTimeoutInMillis = 10000;
-        // remove retry count from here and add to api request context with default va;ue
-        protected int httpRequestRetryCount = 0;
-        protected int poolSizeToBeSet = 100;
+        protected int httpReadTimeoutInMillis = APIClientUtils.getDefaultHttpReadTimeoutInMillis();
+        protected int httpConnectionRequestTimeoutInMillis =
+                APIClientUtils.getDefaultHttpConnectionRequestTimeoutInMillis();
+        protected int httpConnectionTimeoutInMillis = APIClientUtils.getDefaultHttpConnectionRequestTimeoutInMillis();
+        protected int poolSizeToBeSet = APIClientUtils.getDefaultPoolSizeToBeSet();
 
         public APIClientConfig.Builder setHttpReadTimeoutInMillis(int httpReadTimeoutInMillis) {
 
@@ -92,12 +85,6 @@ public class APIClientConfig {
         public APIClientConfig.Builder setHttpConnectionTimeoutInMillis(int connectionTimeoutInMillis) {
 
             this.httpConnectionTimeoutInMillis = connectionTimeoutInMillis;
-            return this;
-        }
-
-        public APIClientConfig.Builder setHttpRequestRetryCount(int httpRequestRetryCount) {
-
-            this.httpRequestRetryCount = httpRequestRetryCount;
             return this;
         }
 

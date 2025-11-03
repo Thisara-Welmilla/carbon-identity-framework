@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.external.api.client.api.service;
+package org.wso2.carbon.identity.external.api.client.internal.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,7 +26,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -40,7 +39,6 @@ import org.wso2.carbon.identity.external.api.client.api.model.APIResponse;
 import org.wso2.carbon.identity.external.api.client.internal.util.APIRequestBuildingUtils;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -77,9 +75,10 @@ public class APIClient {
     }
 
     /**
-     * Makes a POST API call to the given endpoint URL with the provided request context.
+     * Makes a API call to the given endpoint URL with the provided request context.
      *
-     * @param requestContext  Request context containing endpoint URL, headers, and payload.
+     * @param requestContext        Request context containing endpoint URL, headers, and payload.
+     * @param apiInvocationConfig   Configuration for API invocation.
      * @return APIResponse containing the response from the API call.
      * @throws APIClientInvocationException if an error occurs during the API call.
      */
@@ -97,7 +96,7 @@ public class APIClient {
                         + " is not supported.");
         }
         setRequestEntity(httpEntityEnclosingRequestBase, requestContext);
-        return executeRequest(httpEntityEnclosingRequestBase, apiInvocationConfig);
+        return executeRequest(httpEntityEnclosingRequestBase, apiInvocationConfig, 0);
     }
 
     private void setRequestEntity(HttpEntityEnclosingRequestBase httpRequestBase, APIRequestContext requestContext) {
@@ -114,17 +113,19 @@ public class APIClient {
         }
     }
 
-    // keep retry count
-    private APIResponse executeRequest(HttpEntityEnclosingRequestBase request, APIInvocationConfig apiInvocationConfig)
+    private APIResponse executeRequest(HttpEntityEnclosingRequestBase request, APIInvocationConfig apiInvocationConfig,
+                                       int retriedCount)
             throws APIClientInvocationException {
 
         try (CloseableHttpResponse response = httpClient.execute(request)) {
             return handleResponse(response);
-        } catch (ConnectTimeoutException | SocketTimeoutException e) {
-            throw new APIClientInvocationException("Request to API: " + request.getURI() + " timed out.", e);
         } catch (IOException e) {
-            throw new APIClientInvocationException(
-                    "IO error occurred while invoking the API: " + request.getURI() + ".", e);
+            if (retriedCount < apiInvocationConfig.getAllowedRetryCount()) {
+                LOG.warn("Request to API: " + request.getURI() + " timed out. Retrying " +
+                        (retriedCount + 1) + "/" + apiInvocationConfig.getAllowedRetryCount());
+                return executeRequest(request, apiInvocationConfig, retriedCount + 1);
+            }
+            throw new APIClientInvocationException("Request to API: " + request.getURI() + " timed out.", e);
         } finally {
             request.releaseConnection();
         }

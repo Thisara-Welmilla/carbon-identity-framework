@@ -20,6 +20,8 @@ package org.wso2.carbon.identity.external.api.token.handler.internal.util;
 
 import org.wso2.carbon.identity.external.api.client.api.exception.APIClientRequestException;
 import org.wso2.carbon.identity.external.api.client.api.model.APIAuthentication;
+import org.wso2.carbon.identity.external.api.client.api.model.APIRequestContext;
+import org.wso2.carbon.identity.external.api.token.handler.api.exception.TokenRequestException;
 import org.wso2.carbon.identity.external.api.token.handler.api.model.GrantContext;
 import org.wso2.carbon.identity.external.api.token.handler.api.model.GrantContext.Property;
 import org.wso2.carbon.identity.external.api.token.handler.api.model.TokenRequestContext;
@@ -32,53 +34,84 @@ import java.util.Map;
 public class TokenRequestBuilderUtils {
 
     /**
-     * Build APIAuthentication for token request based on the grant type context.
+     * Build APIRequestContext for token request.
      *
-     * @param requestContext Token request context.
-     * @return APIAuthentication instance.
-     * @throws APIClientRequestException If an error occurs while building the authentication.
+     * @param requestContext TokenRequestContext.
+     * @return APIRequestContext.
+     * @throws TokenRequestException TokenRequestException.
      */
-    public static APIAuthentication buildTokenRequestAPIAuthentication(TokenRequestContext requestContext)
-            throws APIClientRequestException {
+    public static APIRequestContext buildAPIRequestContext(TokenRequestContext requestContext)
+            throws TokenRequestException {
 
-        GrantContext grantContext = requestContext.getGrantContext();
-        switch (grantContext.getGrantType()) {
-            case CLIENT_CREDENTIALS:
-                return new APIAuthentication.Builder()
-                        .authType(APIAuthentication.AuthType.BASIC)
-                        .properties(Map.of(
-                                APIAuthentication.Property.USERNAME.getName(),
-                                    grantContext.getProperties().get(Property.CLIENT_ID.getName()),
-                                APIAuthentication.Property.PASSWORD.getName(),
-                                    grantContext.getProperties().get(Property.CLIENT_SECRET.getName())
-                        ))
-                        .build();
-            default:
-                throw new IllegalArgumentException("Unsupported authentication type: " +
-                        requestContext.getGrantContext());
-        }
+        return buildBasicAPIRequestContext(requestContext, buildTokenRequestPayload(requestContext));
     }
 
     /**
-     * Build token request payload based on the grant type context.
+     * Build APIRequestContext for refresh token grant.
      *
-     * @param requestContext Token request context.
-     * @return Token request payload as a string.
+     * @param requestContext TokenRequestContext.
+     * @param refreshToken   Refresh token.
+     * @return APIRequestContext.
+     * @throws TokenRequestException TokenRequestException.
      */
-    public static String buildTokenRequestPayload(TokenRequestContext requestContext) {
+    public static APIRequestContext buildAPIRequestContextForRefreshGrant(
+            TokenRequestContext requestContext, String refreshToken) throws TokenRequestException {
+
+        String payload = String.format(PayloadTemplateByType.REFRESH.getPayload(), refreshToken);
+        return buildBasicAPIRequestContext(requestContext, payload);
+    }
+
+    private static APIRequestContext buildBasicAPIRequestContext(TokenRequestContext requestContext, String payload)
+            throws TokenRequestException {
+
+        APIAuthentication authentication = TokenRequestBuilderUtils.buildTokenRequestAPIAuthentication(requestContext);
+        APIRequestContext.Builder requestContextBuilder = new APIRequestContext.Builder()
+                .setHttpMethod(APIRequestContext.HttpMethod.POST)
+                .setHeaders(requestContext.getHeaders())
+                .setEndpointUrl(requestContext.getTokenEndpointUrl())
+                .setApiAuthentication(authentication)
+                .setPayload(payload);
+        return requestContextBuilder.build();
+    }
+
+    private static APIAuthentication buildTokenRequestAPIAuthentication(TokenRequestContext requestContext)
+            throws TokenRequestException {
+
+        GrantContext grantContext = requestContext.getGrantContext();
+        try {
+            switch (grantContext.getGrantType()) {
+                case CLIENT_CREDENTIAL:
+                    return new APIAuthentication.Builder()
+                            .authType(APIAuthentication.AuthType.BASIC)
+                            .properties(Map.of(
+                                    APIAuthentication.Property.USERNAME.getName(),
+                                    grantContext.getProperty(Property.CLIENT_ID.getName()),
+                                    APIAuthentication.Property.PASSWORD.getName(),
+                                    grantContext.getProperty(Property.CLIENT_SECRET.getName())
+                            ))
+                            .build();
+                default:
+                    throw new TokenRequestException("Unsupported authentication type: " + grantContext.getGrantType());
+            }
+        } catch (APIClientRequestException e) {
+            throw new TokenRequestException("Error building API Authentication for grant type: " +
+                    grantContext.getGrantType(), e);
+        }
+    }
+
+    private static String buildTokenRequestPayload(TokenRequestContext requestContext) throws TokenRequestException {
 
         String template;
         GrantContext grantContext = requestContext.getGrantContext();
         switch (grantContext.getGrantType()) {
-            case CLIENT_CREDENTIALS:
-                template = PayloadTemplateByType.CLIENT_CREDENTIALS.getPayload();
+            case CLIENT_CREDENTIAL:
+                template = PayloadTemplateByType.CLIENT_CREDENTIAL.getPayload();
                 return String.format(template,
-                        grantContext.getProperties().get(Property.CLIENT_ID.getName()),
-                        grantContext.getProperties().get(Property.CLIENT_SECRET.getName()),
-                        grantContext.getProperties().get(Property.SCOPE.getName()));
+                        grantContext.getProperty(Property.CLIENT_ID.getName()),
+                        grantContext.getProperty(Property.CLIENT_SECRET.getName()),
+                        grantContext.getProperty(Property.SCOPE.getName()));
             default:
-                throw new IllegalArgumentException("Unsupported authentication type: " +
-                        requestContext.getGrantContext());
+                throw new TokenRequestException("Unsupported authentication type: " + requestContext.getGrantContext());
         }
     }
 
@@ -87,8 +120,8 @@ public class TokenRequestBuilderUtils {
      */
     public enum PayloadTemplateByType {
 
-        // refresh grant only for here for templates
-        CLIENT_CREDENTIALS("client_credential"),;
+        CLIENT_CREDENTIAL("client_credential"),
+        REFRESH("refresh_token");
 
         private final String payload;
 

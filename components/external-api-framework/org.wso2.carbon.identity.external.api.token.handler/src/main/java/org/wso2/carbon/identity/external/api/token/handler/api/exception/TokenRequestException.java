@@ -16,15 +16,18 @@
  * under the License.
  */
 
-package org.wso2.carbon.identity.external.api.client.api.exception;
+package org.wso2.carbon.identity.external.api.token.handler.api.exception;
 
 /**
- * Exception class for API Client invocation related exceptions.
+ * Exception class for Token Request related exceptions.
  */
-public class APIClientRequestException extends APIClientException {
+public class TokenRequestException extends TokenHandlerException {
 
-    public APIClientRequestException(String message) {
-
+    public TokenRequestException(String message) {
         super(message);
+    }
+
+    public TokenRequestException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
