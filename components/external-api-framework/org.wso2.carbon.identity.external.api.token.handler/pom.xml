@@ -42,10 +42,6 @@
             <artifactId>org.wso2.carbon.identity.external.api.client</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.orbit.org.apache.httpcomponents</groupId>
-            <artifactId>httpcore5</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.json.wso2</groupId>
             <artifactId>json</artifactId>
         </dependency>
@@ -97,28 +93,25 @@
                             version="${carbon.identity.package.export.version}",
                         </Export-Package>
                         <Import-Package>
-                            org.wso2.carbon.identity.external.api.client.api.model; version="${carbon.identity.package.export.version}",
-                            org.wso2.carbon.identity.external.api.client.api.exception; version="${carbon.identity.package.export.version}",
-                            org.wso2.carbon.identity.external.api.client.api.service; version="${carbon.identity.package.export.version}",
-
                             org.apache.commons.lang; version="${commons-lang.wso2.osgi.version.range}",
                             org.apache.commons.logging; version="${import.package.version.commons.logging}",
                             org.apache.commons.collections; version="${commons-collections.wso2.osgi.version.range}",
+
                             org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component; version="${osgi.service.component.imp.pkg.version.range}",
+
                             org.json.*; version="${json.wso2.version.range}",
-                            org.wso2.carbon.database.utils.jdbc;
-                            version="${org.wso2.carbon.database.utils.version.range}",
-                            org.wso2.carbon.database.utils.jdbc.exceptions;
-                            version="${org.wso2.carbon.database.utils.version.range}",
-                            org.wso2.carbon.identity.core.cache;
-                            version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.core.util;
-                            version="${carbon.identity.package.import.version.range}",
+
+                            org.wso2.carbon.identity.external.api.client.api.model; version="${carbon.identity.package.export.version}",
+                            org.wso2.carbon.identity.external.api.client.api.exception; version="${carbon.identity.package.export.version}",
+                            org.wso2.carbon.identity.external.api.client.api.service; version="${carbon.identity.package.export.version}",
+                            org.wso2.carbon.database.utils.jdbc; version="${org.wso2.carbon.database.utils.version.range}",
+                            org.wso2.carbon.database.utils.jdbc.exceptions; version="${org.wso2.carbon.database.utils.version.range}",
+                            org.wso2.carbon.identity.core.cache; version="${carbon.identity.package.import.version.range}",
+                            org.wso2.carbon.identity.core.util; version="${carbon.identity.package.import.version.range}",
                             org.wso2.carbon.utils; version="${carbon.kernel.package.import.version.range}",
                             org.wso2.carbon.identity.event.*; version="${carbon.identity.package.import.version.range}",
-                            org.wso2.carbon.identity.central.log.mgt.utils;
-                            version="${carbon.identity.package.import.version.range}",
+                            org.wso2.carbon.identity.central.log.mgt.utils; version="${carbon.identity.package.import.version.range}",
                             org.wso2.carbon; version="${carbon.kernel.package.import.version.range}",
                             org.wso2.carbon.context; version="${carbon.kernel.package.import.version.range}",
                             org.wso2.carbon.utils.*; version="${carbon.kernel.package.import.version.range}",

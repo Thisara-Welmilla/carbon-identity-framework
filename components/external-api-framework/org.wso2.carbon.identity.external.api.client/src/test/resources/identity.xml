@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server xmlns="http://wso2.org/projects/carbon/carbon.xml">
+    <ExternalAPIClient>
+        <DefaultHttpReadTimeoutInMillis>30000</DefaultHttpReadTimeoutInMillis>
+        <DefaultHttpConnectionRequestTimeoutInMillis>15000</DefaultHttpConnectionRequestTimeoutInMillis>
+        <DefaultHttpConnectionTimeoutInMillis>10000</DefaultHttpConnectionTimeoutInMillis>
+        <DefaultPoolSizeToBeSet>20</DefaultPoolSizeToBeSet>
+    </ExternalAPIClient>
+</Server>
