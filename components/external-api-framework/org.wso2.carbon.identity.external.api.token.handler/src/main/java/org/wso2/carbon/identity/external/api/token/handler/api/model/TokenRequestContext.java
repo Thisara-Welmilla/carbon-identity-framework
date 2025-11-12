@@ -45,10 +45,6 @@ public class TokenRequestContext {
         this.tokenEndpointUrl = builder.endpointUrl;
         this.headers = builder.headers;
         this.payload = builder.payload;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("TokenRequestContext created successfully for endpoint: " + tokenEndpointUrl);
-        }
     }
 
     /**
@@ -90,7 +86,7 @@ public class TokenRequestContext {
     public void setPayLoad(String payload) throws TokenRequestException {
 
         if (StringUtils.isBlank(payload)) {
-            throw new TokenRequestException("Payload cannot be null or empty.");
+            throw new TokenRequestException("Payload cannot be null or blank.");
         }
         this.payload = payload;
     }
@@ -114,7 +110,7 @@ public class TokenRequestContext {
     public void setRefreshGrantPayload(String refreshGrantPayload) throws TokenRequestException {
 
         if (StringUtils.isBlank(refreshGrantPayload)) {
-            throw new TokenRequestException("Payload cannot be null or empty.");
+            throw new TokenRequestException("Payload cannot be null or blank.");
         }
         this.refreshGrantPayload = refreshGrantPayload;
     }
@@ -139,24 +135,48 @@ public class TokenRequestContext {
         private Map<String, String> headers = new HashMap<>();
         private String payload;
 
+        /**
+         * Set Grant Context.
+         *
+         * @param grantContext Grant Context.
+         * @return Builder.
+         */
         public Builder grantContext(GrantContext grantContext) {
 
             this.grantContext = grantContext;
             return this;
         }
 
+        /**
+         * Set Endpoint URL.
+         *
+         * @param endpointUrl Endpoint URL.
+         * @return Builder.
+         */
         public Builder endpointUrl(String endpointUrl) {
 
             this.endpointUrl = endpointUrl;
             return this;
         }
 
+        /**
+         * Set Headers.
+         *
+         * @param headers Headers.
+         * @return Builder.
+         */
         public Builder headers(Map<String, String> headers) {
 
             this.headers = headers;
             return this;
         }
 
+        /**
+         * Set Payload.
+         *
+         * @param payload Payload.
+         * @return Builder.
+         */
         public Builder payload(String payload) {
 
             this.payload = payload;
@@ -175,7 +195,7 @@ public class TokenRequestContext {
                 throw new TokenRequestException("Grant context cannot be null.");
             }
             if (StringUtils.isBlank(endpointUrl)) {
-                throw new TokenRequestException("Endpoint URL cannot be null or empty.");
+                throw new TokenRequestException("Endpoint URL cannot be null or blank.");
             }
             return new TokenRequestContext(this);
         }

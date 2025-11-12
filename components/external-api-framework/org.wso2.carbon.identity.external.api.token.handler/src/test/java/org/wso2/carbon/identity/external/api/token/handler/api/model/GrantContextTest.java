@@ -23,7 +23,6 @@ import org.wso2.carbon.identity.external.api.token.handler.api.exception.TokenHa
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -34,15 +33,15 @@ import static org.testng.Assert.fail;
  */
 public class GrantContextTest {
 
-    private static final String CLIENT_ID = "test_client_id";
-    private static final String CLIENT_SECRET = "test_client_secret";
-    private static final String SCOPE = "test_scope";
+    private static final String CLIENT_ID = "test-client-id";
+    private static final String CLIENT_SECRET = "test-client-secret";
+    private static final String SCOPE = "test-scope";
 
     /**
      * Test successful creation of GrantContext with CLIENT_CREDENTIAL grant type.
      */
     @Test
-    public void testCreateGrantContextWithClientCredential() throws TokenHandlerException {
+    public void testCreateClientCredentialGrantContext() throws TokenHandlerException {
 
         Map<String, String> properties = new HashMap<>();
         properties.put(GrantContext.Property.CLIENT_ID.getName(), CLIENT_ID);
@@ -62,27 +61,7 @@ public class GrantContextTest {
     }
 
     /**
-     * Test creation of GrantContext with minimum required properties.
-     */
-    @Test
-    public void testCreateGrantContextWithMinimumProperties() throws TokenHandlerException {
-
-        Map<String, String> properties = new HashMap<>();
-        properties.put(GrantContext.Property.CLIENT_ID.getName(), CLIENT_ID);
-        properties.put(GrantContext.Property.CLIENT_SECRET.getName(), CLIENT_SECRET);
-        properties.put(GrantContext.Property.SCOPE.getName(), SCOPE);
-
-        GrantContext grantContext = new GrantContext.Builder()
-                .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
-                .properties(properties)
-                .build();
-
-        assertNotNull(grantContext);
-        assertEquals(grantContext.getGrantType(), GrantContext.GrantType.CLIENT_CREDENTIAL);
-    }
-
-    /**
-     * Test creation of GrantContext without grant type - should throw exception.
+     * Test creation of GrantContext without grant type should throw exception.
      */
     @Test
     public void testCreateGrantContextWithoutGrantType() {
@@ -96,17 +75,17 @@ public class GrantContextTest {
             new GrantContext.Builder()
                     .properties(properties)
                     .build();
-            fail("Expected TokenHandlerException");
+            fail("Expected TokenHandlerException was not thrown.");
         } catch (TokenHandlerException e) {
             assertEquals(e.getMessage(), "Grant type must be provided for the grant context configuration.");
         }
     }
 
     /**
-     * Test creation of GrantContext with missing client ID - should throw exception.
+     * Test creation of GrantContext without client_id should throw exception.
      */
     @Test
-    public void testCreateGrantContextWithMissingClientId() {
+    public void testCreateGrantContextWithoutClientId() {
 
         Map<String, String> properties = new HashMap<>();
         properties.put(GrantContext.Property.CLIENT_SECRET.getName(), CLIENT_SECRET);
@@ -117,20 +96,19 @@ public class GrantContextTest {
                     .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
                     .properties(properties)
                     .build();
-            fail("Expected NoSuchElementException");
-        } catch (NoSuchElementException e) {
-            assertEquals(e.getMessage(), "The property client_id must be provided as a property for the " +
-                    "CLIENT_CREDENTIAL grant type.");
+            fail("Expected TokenHandlerException was not thrown.");
         } catch (TokenHandlerException e) {
-            fail("Unexpected TokenHandlerException: " + e.getMessage());
+            assertEquals(e.getMessage(), String.format("The property %s must be provided as a property for the " +
+                    "%s grant type.", GrantContext.Property.CLIENT_ID.getName(),
+                    GrantContext.GrantType.CLIENT_CREDENTIAL));
         }
     }
 
     /**
-     * Test creation of GrantContext with missing client secret - should throw exception.
+     * Test creation of GrantContext without client_secret should throw exception.
      */
     @Test
-    public void testCreateGrantContextWithMissingClientSecret() {
+    public void testCreateGrantContextWithoutClientSecret() {
 
         Map<String, String> properties = new HashMap<>();
         properties.put(GrantContext.Property.CLIENT_ID.getName(), CLIENT_ID);
@@ -141,20 +119,19 @@ public class GrantContextTest {
                     .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
                     .properties(properties)
                     .build();
-            fail("Expected NoSuchElementException");
-        } catch (NoSuchElementException e) {
-            assertEquals(e.getMessage(), "The property client_secret must be provided as a property for the " +
-                    "CLIENT_CREDENTIAL grant type.");
+            fail("Expected TokenHandlerException was not thrown.");
         } catch (TokenHandlerException e) {
-            fail("Unexpected TokenHandlerException: " + e.getMessage());
+            assertEquals(e.getMessage(), String.format("The property %s must be provided as a property for the " +
+                    "%s grant type.", GrantContext.Property.CLIENT_SECRET.getName(),
+                    GrantContext.GrantType.CLIENT_CREDENTIAL));
         }
     }
 
     /**
-     * Test creation of GrantContext with missing scope - should throw exception.
+     * Test creation of GrantContext without scope should throw exception.
      */
     @Test
-    public void testCreateGrantContextWithMissingScope() {
+    public void testCreateGrantContextWithoutScope() {
 
         Map<String, String> properties = new HashMap<>();
         properties.put(GrantContext.Property.CLIENT_ID.getName(), CLIENT_ID);
@@ -165,23 +142,22 @@ public class GrantContextTest {
                     .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
                     .properties(properties)
                     .build();
-            fail("Expected NoSuchElementException");
-        } catch (NoSuchElementException e) {
-            assertEquals(e.getMessage(), "The property scope must be provided as a property for the " +
-                    "CLIENT_CREDENTIAL grant type.");
+            fail("Expected TokenHandlerException was not thrown.");
         } catch (TokenHandlerException e) {
-            fail("Unexpected TokenHandlerException: " + e.getMessage());
+            assertEquals(e.getMessage(), String.format("The property %s must be provided as a property for the " +
+                    "%s grant type.", GrantContext.Property.SCOPE.getName(),
+                    GrantContext.GrantType.CLIENT_CREDENTIAL));
         }
     }
 
     /**
-     * Test creation of GrantContext with blank client ID - should throw exception.
+     * Test creation of GrantContext with blank client_id should throw exception.
      */
     @Test
     public void testCreateGrantContextWithBlankClientId() {
 
         Map<String, String> properties = new HashMap<>();
-        properties.put(GrantContext.Property.CLIENT_ID.getName(), "");
+        properties.put(GrantContext.Property.CLIENT_ID.getName(), "   ");
         properties.put(GrantContext.Property.CLIENT_SECRET.getName(), CLIENT_SECRET);
         properties.put(GrantContext.Property.SCOPE.getName(), SCOPE);
 
@@ -190,23 +166,22 @@ public class GrantContextTest {
                     .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
                     .properties(properties)
                     .build();
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(), "The Property client_id cannot be blank.");
+            fail("Expected TokenHandlerException was not thrown.");
         } catch (TokenHandlerException e) {
-            fail("Unexpected TokenHandlerException: " + e.getMessage());
+            assertEquals(e.getMessage(), String.format("The Property %s cannot be blank.",
+                    GrantContext.Property.CLIENT_ID.getName()));
         }
     }
 
     /**
-     * Test creation of GrantContext with blank client secret - should throw exception.
+     * Test creation of GrantContext with blank client_secret should throw exception.
      */
     @Test
     public void testCreateGrantContextWithBlankClientSecret() {
 
         Map<String, String> properties = new HashMap<>();
         properties.put(GrantContext.Property.CLIENT_ID.getName(), CLIENT_ID);
-        properties.put(GrantContext.Property.CLIENT_SECRET.getName(), "   ");
+        properties.put(GrantContext.Property.CLIENT_SECRET.getName(), "");
         properties.put(GrantContext.Property.SCOPE.getName(), SCOPE);
 
         try {
@@ -214,16 +189,38 @@ public class GrantContextTest {
                     .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
                     .properties(properties)
                     .build();
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(), "The Property client_secret cannot be blank.");
+            fail("Expected TokenHandlerException was not thrown.");
         } catch (TokenHandlerException e) {
-            fail("Unexpected TokenHandlerException: " + e.getMessage());
+            assertEquals(e.getMessage(), String.format("The Property %s cannot be blank.",
+                    GrantContext.Property.CLIENT_SECRET.getName()));
         }
     }
 
     /**
-     * Test creation of GrantContext with null properties map.
+     * Test creation of GrantContext with blank scope should throw exception.
+     */
+    @Test
+    public void testCreateGrantContextWithBlankScope() {
+
+        Map<String, String> properties = new HashMap<>();
+        properties.put(GrantContext.Property.CLIENT_ID.getName(), CLIENT_ID);
+        properties.put(GrantContext.Property.CLIENT_SECRET.getName(), CLIENT_SECRET);
+        properties.put(GrantContext.Property.SCOPE.getName(), "");
+
+        try {
+            new GrantContext.Builder()
+                    .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
+                    .properties(properties)
+                    .build();
+            fail("Expected TokenHandlerException was not thrown.");
+        } catch (TokenHandlerException e) {
+            assertEquals(e.getMessage(), String.format("The Property %s cannot be blank.",
+                    GrantContext.Property.SCOPE.getName()));
+        }
+    }
+
+    /**
+     * Test creation of GrantContext with null properties should throw exception.
      */
     @Test
     public void testCreateGrantContextWithNullProperties() {
@@ -233,72 +230,36 @@ public class GrantContextTest {
                     .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
                     .properties(null)
                     .build();
-            fail("Expected NoSuchElementException");
-        } catch (NoSuchElementException e) {
-            assertEquals(e.getMessage(), "The property client_id must be provided as a property for the " +
-                    "CLIENT_CREDENTIAL grant type.");
+            fail("Expected TokenHandlerException was not thrown.");
         } catch (TokenHandlerException e) {
-            fail("Unexpected TokenHandlerException: " + e.getMessage());
+            assertEquals(e.getMessage(), String.format("The property %s must be provided as a property for the " +
+                    "%s grant type.", GrantContext.Property.CLIENT_ID.getName(),
+                    GrantContext.GrantType.CLIENT_CREDENTIAL));
         }
     }
 
     /**
-     * Test creation of GrantContext without setting properties.
+     * Test builder can be reused for multiple builds.
      */
     @Test
-    public void testCreateGrantContextWithoutProperties() {
-
-        try {
-            new GrantContext.Builder()
-                    .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
-                    .build();
-            fail("Expected NoSuchElementException");
-        } catch (NoSuchElementException e) {
-            assertEquals(e.getMessage(), "The property client_id must be provided as a property for the " +
-                    "CLIENT_CREDENTIAL grant type.");
-        } catch (TokenHandlerException e) {
-            fail("Unexpected TokenHandlerException: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Test GrantContext property names.
-     */
-    @Test
-    public void testGrantContextPropertyNames() {
-
-        assertEquals(GrantContext.Property.CLIENT_ID.getName(), "client_id");
-        assertEquals(GrantContext.Property.CLIENT_SECRET.getName(), "client_secret");
-        assertEquals(GrantContext.Property.SCOPE.getName(), "scope");
-    }
-
-    /**
-     * Test accessing non-existent property returns null.
-     */
-    @Test
-    public void testGetNonExistentProperty() throws TokenHandlerException {
+    public void testBuilderReusability() throws TokenHandlerException {
 
         Map<String, String> properties = new HashMap<>();
         properties.put(GrantContext.Property.CLIENT_ID.getName(), CLIENT_ID);
         properties.put(GrantContext.Property.CLIENT_SECRET.getName(), CLIENT_SECRET);
         properties.put(GrantContext.Property.SCOPE.getName(), SCOPE);
 
-        GrantContext grantContext = new GrantContext.Builder()
+        GrantContext.Builder builder = new GrantContext.Builder()
                 .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
-                .properties(properties)
-                .build();
+                .properties(properties);
 
-        assertEquals(grantContext.getProperty("non_existent_property"), null);
-    }
+        GrantContext grantContext1 = builder.build();
+        GrantContext grantContext2 = builder.build();
 
-    /**
-     * Test GrantType enum values.
-     */
-    @Test
-    public void testGrantTypeEnumValues() {
-
-        GrantContext.GrantType[] grantTypes = GrantContext.GrantType.values();
-        assertEquals(grantTypes.length, 1);
-        assertEquals(grantTypes[0], GrantContext.GrantType.CLIENT_CREDENTIAL);
+        assertNotNull(grantContext1);
+        assertNotNull(grantContext2);
+        // Verify both contexts have correct values.
+        assertEquals(grantContext1.getProperty(GrantContext.Property.CLIENT_ID.getName()), CLIENT_ID);
+        assertEquals(grantContext2.getProperty(GrantContext.Property.CLIENT_ID.getName()), CLIENT_ID);
     }
 }

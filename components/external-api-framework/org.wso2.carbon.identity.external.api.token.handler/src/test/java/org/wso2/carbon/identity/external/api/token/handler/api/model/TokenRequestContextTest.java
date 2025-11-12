@@ -29,7 +29,6 @@ import java.util.Map;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 /**
@@ -37,15 +36,14 @@ import static org.testng.Assert.fail;
  */
 public class TokenRequestContextTest {
 
-    private static final String CLIENT_ID = "test_client_id";
-    private static final String CLIENT_SECRET = "test_client_secret";
-    private static final String SCOPE = "test_scope";
-    private static final String ENDPOINT_URL = "https://example.com/token";
-    private static final String PAYLOAD = "test_payload";
-    private static final String REFRESH_PAYLOAD = "refresh_test_payload";
+    private static final String CLIENT_ID = "test-client-id";
+    private static final String CLIENT_SECRET = "test-client-secret";
+    private static final String SCOPE = "test-scope";
+    private static final String TOKEN_ENDPOINT_URL = "https://example.com/token";
+    private static final String PAYLOAD = "grant_type=client_credentials";
+    private static final String REFRESH_PAYLOAD = "grant_type=refresh_token&refresh_token=test-refresh-token";
 
     private GrantContext grantContext;
-    private Map<String, String> headers;
 
     @BeforeMethod
     public void setUp() throws TokenHandlerException {
@@ -59,10 +57,6 @@ public class TokenRequestContextTest {
                 .grantType(GrantContext.GrantType.CLIENT_CREDENTIAL)
                 .properties(properties)
                 .build();
-
-        headers = new HashMap<>();
-        headers.put("Content-Type", "application/x-www-form-urlencoded");
-        headers.put("Accept", "application/json");
     }
 
     /**
@@ -71,58 +65,83 @@ public class TokenRequestContextTest {
     @Test
     public void testCreateTokenRequestContextWithAllParameters() throws TokenRequestException {
 
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/x-www-form-urlencoded");
+        headers.put("Authorization", "Basic dGVzdDp0ZXN0");
+
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .headers(headers)
                 .payload(PAYLOAD)
                 .build();
 
         assertNotNull(context);
         assertEquals(context.getGrantContext(), grantContext);
-        assertEquals(context.getTokenEndpointUrl(), ENDPOINT_URL);
-        assertEquals(context.getHeaders(), headers);
+        assertEquals(context.getTokenEndpointUrl(), TOKEN_ENDPOINT_URL);
+        assertEquals(context.getHeaders().size(), 2);
+        assertEquals(context.getHeaders().get("Content-Type"), "application/x-www-form-urlencoded");
+        assertEquals(context.getHeaders().get("Authorization"), "Basic dGVzdDp0ZXN0");
         assertEquals(context.getPayLoad(), PAYLOAD);
+        assertNull(context.getRefreshGrantPayload());
     }
 
     /**
-     * Test creation of TokenRequestContext with minimum required parameters.
+     * Test successful creation of TokenRequestContext without headers.
      */
     @Test
-    public void testCreateTokenRequestContextWithMinimumParameters() throws TokenRequestException {
+    public void testCreateTokenRequestContextWithoutHeaders() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
+                .payload(PAYLOAD)
                 .build();
 
         assertNotNull(context);
         assertEquals(context.getGrantContext(), grantContext);
-        assertEquals(context.getTokenEndpointUrl(), ENDPOINT_URL);
+        assertEquals(context.getTokenEndpointUrl(), TOKEN_ENDPOINT_URL);
         assertNotNull(context.getHeaders());
-        assertTrue(context.getHeaders().isEmpty());
+        assertEquals(context.getHeaders().size(), 0);
+        assertEquals(context.getPayLoad(), PAYLOAD);
     }
 
     /**
-     * Test creation of TokenRequestContext without grant context - should throw exception.
+     * Test successful creation of TokenRequestContext without payload.
+     */
+    @Test
+    public void testCreateTokenRequestContextWithoutPayload() throws TokenRequestException {
+
+        TokenRequestContext context = new TokenRequestContext.Builder()
+                .grantContext(grantContext)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
+                .build();
+
+        assertNotNull(context);
+        assertEquals(context.getGrantContext(), grantContext);
+        assertEquals(context.getTokenEndpointUrl(), TOKEN_ENDPOINT_URL);
+        assertNull(context.getPayLoad());
+    }
+
+    /**
+     * Test creation of TokenRequestContext without grant context should throw exception.
      */
     @Test
     public void testCreateTokenRequestContextWithoutGrantContext() {
 
         try {
             new TokenRequestContext.Builder()
-                    .endpointUrl(ENDPOINT_URL)
-                    .headers(headers)
+                    .endpointUrl(TOKEN_ENDPOINT_URL)
                     .payload(PAYLOAD)
                     .build();
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
             assertEquals(e.getMessage(), "Grant context cannot be null.");
         }
     }
 
     /**
-     * Test creation of TokenRequestContext without endpoint URL - should throw exception.
+     * Test creation of TokenRequestContext without endpoint URL should throw exception.
      */
     @Test
     public void testCreateTokenRequestContextWithoutEndpointUrl() {
@@ -130,17 +149,16 @@ public class TokenRequestContextTest {
         try {
             new TokenRequestContext.Builder()
                     .grantContext(grantContext)
-                    .headers(headers)
                     .payload(PAYLOAD)
                     .build();
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Endpoint URL cannot be null or empty.");
+            assertEquals(e.getMessage(), "Endpoint URL cannot be null or blank.");
         }
     }
 
     /**
-     * Test creation of TokenRequestContext with blank endpoint URL - should throw exception.
+     * Test creation of TokenRequestContext with blank endpoint URL should throw exception.
      */
     @Test
     public void testCreateTokenRequestContextWithBlankEndpointUrl() {
@@ -149,17 +167,16 @@ public class TokenRequestContextTest {
             new TokenRequestContext.Builder()
                     .grantContext(grantContext)
                     .endpointUrl("   ")
-                    .headers(headers)
                     .payload(PAYLOAD)
                     .build();
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Endpoint URL cannot be null or empty.");
+            assertEquals(e.getMessage(), "Endpoint URL cannot be null or blank.");
         }
     }
 
     /**
-     * Test creation of TokenRequestContext with empty endpoint URL - should throw exception.
+     * Test creation of TokenRequestContext with empty endpoint URL should throw exception.
      */
     @Test
     public void testCreateTokenRequestContextWithEmptyEndpointUrl() {
@@ -168,248 +185,198 @@ public class TokenRequestContextTest {
             new TokenRequestContext.Builder()
                     .grantContext(grantContext)
                     .endpointUrl("")
-                    .headers(headers)
                     .payload(PAYLOAD)
                     .build();
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Endpoint URL cannot be null or empty.");
+            assertEquals(e.getMessage(), "Endpoint URL cannot be null or blank.");
         }
     }
 
     /**
-     * Test setting payload after creating TokenRequestContext.
+     * Test setPayLoad with valid payload.
      */
     @Test
-    public void testSetPayload() throws TokenRequestException {
+    public void testSetPayLoad() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
+
+        assertNull(context.getPayLoad());
 
         context.setPayLoad(PAYLOAD);
         assertEquals(context.getPayLoad(), PAYLOAD);
     }
 
     /**
-     * Test setting null payload - should throw exception.
+     * Test setPayLoad with null payload should throw exception.
      */
     @Test
-    public void testSetNullPayload() throws TokenRequestException {
+    public void testSetPayLoadWithNull() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
 
         try {
             context.setPayLoad(null);
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Payload cannot be null or empty.");
+            assertEquals(e.getMessage(), "Payload cannot be null or blank.");
         }
     }
 
     /**
-     * Test setting empty payload - should throw exception.
+     * Test setPayLoad with empty payload should throw exception.
      */
     @Test
-    public void testSetEmptyPayload() throws TokenRequestException {
+    public void testSetPayLoadWithEmpty() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
 
         try {
             context.setPayLoad("");
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Payload cannot be null or empty.");
+            assertEquals(e.getMessage(), "Payload cannot be null or blank.");
         }
     }
 
     /**
-     * Test setting blank payload - should throw exception.
+     * Test setPayLoad with blank payload should throw exception.
      */
     @Test
-    public void testSetBlankPayload() throws TokenRequestException {
+    public void testSetPayLoadWithBlank() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
 
         try {
             context.setPayLoad("   ");
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Payload cannot be null or empty.");
+            assertEquals(e.getMessage(), "Payload cannot be null or blank.");
         }
     }
 
     /**
-     * Test setting refresh grant payload.
+     * Test setRefreshGrantPayload with valid payload.
      */
     @Test
     public void testSetRefreshGrantPayload() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
+                .payload(PAYLOAD)
                 .build();
+
+        assertNull(context.getRefreshGrantPayload());
 
         context.setRefreshGrantPayload(REFRESH_PAYLOAD);
         assertEquals(context.getRefreshGrantPayload(), REFRESH_PAYLOAD);
     }
 
     /**
-     * Test setting null refresh grant payload - should throw exception.
+     * Test setRefreshGrantPayload with null payload should throw exception.
      */
     @Test
-    public void testSetNullRefreshGrantPayload() throws TokenRequestException {
+    public void testSetRefreshGrantPayloadWithNull() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
 
         try {
             context.setRefreshGrantPayload(null);
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Payload cannot be null or empty.");
+            assertEquals(e.getMessage(), "Payload cannot be null or blank.");
         }
     }
 
     /**
-     * Test setting empty refresh grant payload - should throw exception.
+     * Test setRefreshGrantPayload with empty payload should throw exception.
      */
     @Test
-    public void testSetEmptyRefreshGrantPayload() throws TokenRequestException {
+    public void testSetRefreshGrantPayloadWithEmpty() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
 
         try {
             context.setRefreshGrantPayload("");
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Payload cannot be null or empty.");
+            assertEquals(e.getMessage(), "Payload cannot be null or blank.");
         }
     }
 
     /**
-     * Test setting blank refresh grant payload - should throw exception.
+     * Test setRefreshGrantPayload with blank payload should throw exception.
      */
     @Test
-    public void testSetBlankRefreshGrantPayload() throws TokenRequestException {
+    public void testSetRefreshGrantPayloadWithBlank() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
 
         try {
             context.setRefreshGrantPayload("   ");
-            fail("Expected TokenRequestException");
+            fail("Expected TokenRequestException was not thrown.");
         } catch (TokenRequestException e) {
-            assertEquals(e.getMessage(), "Payload cannot be null or empty.");
+            assertEquals(e.getMessage(), "Payload cannot be null or blank.");
         }
     }
 
     /**
-     * Test headers are properly set and retrieved.
+     * Test builder chaining.
      */
     @Test
-    public void testHeadersHandling() throws TokenRequestException {
+    public void testBuilderChaining() throws TokenRequestException {
 
-        Map<String, String> customHeaders = new HashMap<>();
-        customHeaders.put("Authorization", "Bearer token");
-        customHeaders.put("Custom-Header", "custom-value");
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/x-www-form-urlencoded");
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
-                .headers(customHeaders)
-                .build();
-
-        Map<String, String> retrievedHeaders = context.getHeaders();
-        assertEquals(retrievedHeaders.size(), 2);
-        assertEquals(retrievedHeaders.get("Authorization"), "Bearer token");
-        assertEquals(retrievedHeaders.get("Custom-Header"), "custom-value");
-    }
-
-    /**
-     * Test with null headers - should not fail.
-     */
-    @Test
-    public void testNullHeaders() throws TokenRequestException {
-
-        TokenRequestContext context = new TokenRequestContext.Builder()
-                .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
-                .headers(null)
-                .build();
-
-        assertNotNull(context);
-        assertNull(context.getHeaders());
-    }
-
-    /**
-     * Test with empty headers map.
-     */
-    @Test
-    public void testEmptyHeaders() throws TokenRequestException {
-
-        Map<String, String> emptyHeaders = new HashMap<>();
-
-        TokenRequestContext context = new TokenRequestContext.Builder()
-                .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
-                .headers(emptyHeaders)
-                .build();
-
-        assertNotNull(context);
-        assertNotNull(context.getHeaders());
-        assertTrue(context.getHeaders().isEmpty());
-    }
-
-    /**
-     * Test builder pattern with method chaining.
-     */
-    @Test
-    public void testBuilderMethodChaining() throws TokenRequestException {
-
-        TokenRequestContext context = new TokenRequestContext.Builder()
-                .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .headers(headers)
                 .payload(PAYLOAD)
                 .build();
 
         assertNotNull(context);
         assertEquals(context.getGrantContext(), grantContext);
-        assertEquals(context.getTokenEndpointUrl(), ENDPOINT_URL);
-        assertEquals(context.getHeaders(), headers);
+        assertEquals(context.getTokenEndpointUrl(), TOKEN_ENDPOINT_URL);
+        assertEquals(context.getHeaders().size(), 1);
         assertEquals(context.getPayLoad(), PAYLOAD);
     }
 
     /**
-     * Test initial payload is null when not set in builder.
+     * Test headers map is empty by default when not set.
      */
     @Test
-    public void testInitialPayloadIsNull() throws TokenRequestException {
+    public void testDefaultHeaders() throws TokenRequestException {
 
         TokenRequestContext context = new TokenRequestContext.Builder()
                 .grantContext(grantContext)
-                .endpointUrl(ENDPOINT_URL)
+                .endpointUrl(TOKEN_ENDPOINT_URL)
                 .build();
 
-        assertNull(context.getPayLoad());
-        assertNull(context.getRefreshGrantPayload());
+        assertNotNull(context.getHeaders());
+        assertEquals(context.getHeaders().size(), 0);
     }
 }

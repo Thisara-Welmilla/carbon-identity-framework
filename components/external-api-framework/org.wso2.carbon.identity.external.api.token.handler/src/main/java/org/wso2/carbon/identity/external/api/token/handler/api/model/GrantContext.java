@@ -26,7 +26,6 @@ import org.wso2.carbon.identity.external.api.token.handler.api.exception.TokenHa
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * Model class for Grant Type Context.
@@ -38,13 +37,10 @@ public class GrantContext {
     private final GrantType grantType;
     private final Map<String, String> properties;
 
-    public GrantContext(GrantContext.Builder builder) {
+    private GrantContext(GrantContext.Builder builder) {
 
         this.grantType = builder.grantType;
         this.properties = Collections.unmodifiableMap(new HashMap<>(builder.resolvedGrantProperties));
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("GrantContext created successfully for grant type: " + grantType);
-        }
     }
 
     /**
@@ -77,12 +73,24 @@ public class GrantContext {
         private Map<String, String> propertyMap = new HashMap<>();
         private final Map<String, String> resolvedGrantProperties = new HashMap<>();
 
+        /**
+         * Set Grant Type.
+         *
+         * @param grantType Grant Type.
+         * @return Builder.
+         */
         public Builder grantType(GrantType grantType) {
 
             this.grantType = grantType;
             return this;
         }
 
+        /**
+         * Set Properties.
+         *
+         * @param properties Properties.
+         * @return Builder.
+         */
         public Builder properties(Map<String, String> properties) {
 
             this.propertyMap = properties;
@@ -116,7 +124,7 @@ public class GrantContext {
             return new GrantContext(this);
         }
 
-        private String getProperty(String propertyName) {
+        private String getProperty(String propertyName) throws TokenHandlerException {
 
             if (propertyMap != null && propertyMap.containsKey(propertyName)) {
                 String propValue = propertyMap.get(propertyName);
