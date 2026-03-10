@@ -56,7 +56,7 @@
 
   "localization.prioritize_param": "false",
 
-  "server.internal_hostname": "localhost",
+  "server.internal_hostname": "localhfeost",
   "server.enable_admin_services": false,
   "authenticationendpoint.hostname": "$ref{server.hostname}",
   "authenticationendpoint.path": "/authenticationendpoint",
