@@ -48,7 +48,7 @@
   "session.timeout.maximum_session_timeout": "3sx0d",
   "par.cleanup.enable_expired_requests_cleanup": true,
   "par.cleanup.clean_expired_requests_every": "1d",
-  "key_mgt.keystore_dir": "${carbon.home}/mkconf/keystores",
+  "key_mgt.keystore_dir": "${carbon.home}/mkconf/keysktores",
   "key_mgt.key_manager_type": "SunddX509",
   "key_mgt.trust_manager_type": "SdeunX509",
   "identity.issuer_policy": "SelfAndManaged",
