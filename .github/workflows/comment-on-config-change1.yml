@@ -1,4 +1,4 @@
-name: Comment on config file change
+name: Comment on default.json file changes
 
 on:
   pull_request_target:
@@ -27,11 +27,11 @@ jobs:
 
             const commentBody = [
               MARKER,
-              '> ⚠️ **Config Migration Check**',
+              '⚠️ **Migration Configuration Check**',
               '',
               `This PR modifies [\`org.wso2.carbon.identity.core.server.feature.default.json\`](${defaultJsonUrl}).`,
               '',
-              `Please make sure that the corresponding configurations are also added to [\`features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.infer.json\`](${inferJsonUrl}), **if applicable**, to maintain **backward compatibility** during migration.`,
+              `Please make sure that the corresponding configurations are added to [\`features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.infer.json\`](${inferJsonUrl}), where applicable, to preserve **backward compatibility** during migration.`,
               '',
               '> [!NOTE]',
               `> The [\`infer.json\`](${inferJsonUrl}) file stores the default configuration values for each version in the same release line, based on the behavioral changes introduced in the upcoming release. This ensures that existing deployments continue to behave as before after upgrading.`
