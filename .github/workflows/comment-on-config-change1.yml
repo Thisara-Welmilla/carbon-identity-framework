@@ -37,10 +37,10 @@ jobs:
               `> The [\`infer.json\`](${inferJsonUrl}) file stores the default configuration values for each version in the same release line, based on the behavioral changes introduced in the upcoming release. This ensures that existing deployments continue to behave as before after upgrading.`
             ].join('\n');
 
-            const existingComments = await github.rest.pulls.listReviewComments({
+            const existingComments = await github.rest.issues.listComments({
               owner: repo.owner,
               repo: repo.repo,
-              pull_number: context.issue.number,
+              issue_number: context.issue.number,
             });
 
             const alreadyPosted = existingComments.data.some(comment =>
@@ -52,19 +52,11 @@ jobs:
               return;
             }
 
-            await github.rest.pulls.createReview({
+            await github.rest.issues.createComment({
               owner: repo.owner,
               repo: repo.repo,
-              pull_number: context.issue.number,
-              commit_id: context.payload.pull_request.head.sha,
-              event: 'COMMENT',
-              comments: [
-                {
-                  path: 'features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.default.json',
-                  position: 1,
-                  body: commentBody,
-                }
-              ]
+              issue_number: context.issue.number,
+              body: commentBody,
             });
 
             console.log('Reminder comment posted.');
