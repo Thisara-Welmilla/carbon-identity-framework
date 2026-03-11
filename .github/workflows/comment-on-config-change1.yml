@@ -1,7 +1,10 @@
 name: Comment on config file change
 
 on:
-  pull_request:
+  pull_request_target:
+    branches:
+      - master
+      - next
     paths:
       - 'features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.default.json'
 
@@ -10,13 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-
     steps:
-      - name: Get the latest commit SHA
-        id: get-sha
-        run: echo "sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-
-      - name: Post inline review comment on file
+      - name: Post or skip inline review comment on file
         uses: actions/github-script@v7
         with:
           script: |
@@ -25,12 +23,48 @@ jobs:
             const defaultJsonUrl = `${baseUrl}/org.wso2.carbon.identity.core.server.feature.default.json`;
             const inferJsonUrl = `${baseUrl}/org.wso2.carbon.identity.core.server.feature.infer.json`;
 
-            await github.rest.pulls.createReviewComment({
+            const MARKER = '<!-- config-migration-check -->';
+
+            const commentBody = [
+              MARKER,
+              '> ⚠️ **Config Migration Check**',
+              '',
+              `This PR modifies [\`org.wso2.carbon.identity.core.server.feature.default.json\`](${defaultJsonUrl}).`,
+              '',
+              `Please make sure that the corresponding configurations are also added to [\`features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.infer.json\`](${inferJsonUrl}), **if applicable**, to maintain **backward compatibility** during migration.`,
+              '',
+              '> [!NOTE]',
+              `> The [\`infer.json\`](${inferJsonUrl}) file stores the default configuration values for each version in the same release line, based on the behavioral changes introduced in the upcoming release. This ensures that existing deployments continue to behave as before after upgrading.`
+            ].join('\n');
+
+            const existingComments = await github.rest.pulls.listReviewComments({
               owner: repo.owner,
               repo: repo.repo,
               pull_number: context.issue.number,
-              commit_id: '${{ steps.get-sha.outputs.sha }}',
-              path: 'features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.default.json',
-              subject_type: 'file',
-              body: `⚠️ **Migration Configuration Check**\n\nThis PR modifies [\`org.wso2.carbon.identity.core.server.feature.default.json\`](${defaultJsonUrl}).\n\nPlease make sure that the corresponding configurations are added to [\`features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.infer.json\`](${inferJsonUrl}), where applicable, to preserve backward compatibility during migration.\n\n> [!NOTE]\n> The [\`infer.json\`](${inferJsonUrl}) file stores the default configuration values for each version in the same release line, based on the behavioral changes introduced in the upcoming release. This ensures that existing deployments continue to behave as before after upgrading.`
-            })
+            });
+
+            const alreadyPosted = existingComments.data.some(comment =>
+              comment.body.includes(MARKER)
+            );
+
+            if (alreadyPosted) {
+              console.log('Reminder comment already exists. Skipping.');
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner: repo.owner,
+              repo: repo.repo,
+              pull_number: context.issue.number,
+              commit_id: context.payload.pull_request.head.sha,
+              event: 'COMMENT',
+              comments: [
+                {
+                  path: 'features/identity-core/org.wso2.carbon.identity.core.server.feature/resources/org.wso2.carbon.identity.core.server.feature.default.json',
+                  position: 1,
+                  body: commentBody,
+                }
+              ]
+            });
+
+            console.log('Reminder comment posted.');
