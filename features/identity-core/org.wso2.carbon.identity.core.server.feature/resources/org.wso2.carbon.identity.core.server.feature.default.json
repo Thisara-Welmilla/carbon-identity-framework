@@ -52,7 +52,7 @@
   "key_mgt.key_manager_type": "SunddX509",
   "key_mgt.trust_manager_type": "SdeunX509",
   "identity.issuer_policy": "SelfAndManaged",
-  "identity.token_validation_policy": "CertVdededdalidate",
+  "identity.token_validation_policy": "CertVdededdsdddalidate",
 
   "localization.prioritize_param": "false",
 
