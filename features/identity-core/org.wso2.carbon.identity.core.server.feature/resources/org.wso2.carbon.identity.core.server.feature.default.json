@@ -3,6 +3,8 @@
   "authentication.consent.subject.prompt": true,
   "authentication.map_federated_users_to_local": false,
   "authentication.enable_scope_based_claim_filtering": true,
+  "authentication.include_auth_failure_reason_in_api_based_response": true,
+  "authentication.include_multi_options_in_api_based_auth_response": true,
   "authentication.allow_sp_requested_fed_claims_only": true,
   "authentication.endpoint.enable_custom_claim_mappings": true,
   "authentication.endpoint.enable_merging_custom_claim_mappings_with_default": true,
@@ -231,7 +233,7 @@
   "oauth.grant_type.ciba.enable": true,
   "oauth.grant_type.ciba.grant_handler": "org.wso2.carbon.identity.oauth.ciba.grant.CibaGrantHandler",
   "oauth.grant_type.ciba.grant_validator": "org.wso2.carbon.identity.oauth.ciba.grant.CibaGrantValidator",
-  "oauth.grant_type.ciba.allow_public_client": true,
+  "oauth.grant_type.ciba.allow_public_client": false,
   "oauth.dcrm.application_role_permission_required_to_view": true,
   "oauth.dcrm.return_null_fields_in_response": false,
   "oauth.dcr.enable_fapi_enforcement": false,
@@ -339,7 +341,7 @@
 
   "oauth.enable_legacy_session_bound_token_behaviour": false,
   "oauth.allow_session_bound_tokens_after_idle_session_expiry": false,
-  "oauth.listener.agent_application_creator.enable": false,
+  "oauth.listener.agent_application_creator.enable": true,
   "oauth.listener.agent_application_creator.class": "org.wso2.carbon.identity.oauth.listener.UserApplicationCreationListener",
   "oauth.listener.agent_application_creator.order": "99",
 
@@ -367,6 +369,7 @@
   "saml.enable_saml_sp_certificate_expiry_validation": true,
   "saml.enable_saml_idp_init_logout_response_signing": true,
   "saml.return_valid_name_id_format": false,
+  "saml.response.allow_nested_assertions": false,
 
   "saml.endpoints.idp_url": "$ref{server.base_path}/samlsso",
   "saml.endpoints.logout": "$ref{server.base_path}/authenticationendpoint/samlsso_logout.do",
@@ -579,6 +582,8 @@
   ],
 
   "identity_mgt.claims.add_userstore_domain_to_group_claims": false,
+
+  "identity_secret_manager.secret_value_clob_column_exists": true,
 
   "event.default_listener.system_api_resource_management_listener.priority": "211",
   "event.default_listener.system_api_resource_management_listener.enable": true,
@@ -832,6 +837,9 @@
   "cache.push_device_registration_request_cache.enable": true,
   "cache.push_device_registration_request_cache.timeout": "300",
   "cache.push_device_registration_request_cache.capacity": "$ref{cache.default_capacity}",
+  "cache.saml_cert_cache.enable": true,
+  "cache.saml_cert_cache.timeout": "900",
+  "cache.saml_cert_cache.capacity": "100",
 
   "resource_access_control.default_access_allow": false,
   "resource_access_control.introspect.secured": true,
@@ -1421,6 +1429,7 @@
   "console.ui.routes.organizationEnabledRoutes.users": "v0.0.0",
   "console.ui.routes.organizationEnabledRoutes.workflowInstanceDetails": "v0.0.0",
   "console.ui.routes.organizationEnabledRoutes.workflowInstances": "v0.0.0",
+  "console.ui.routes.organizationEnabledRoutes.residentOutboundProvisioning": "v0.0.0",
   "console.ui.multi_tenancy.tenant_domain_illegal_characters_regex": ".*[^a-z0-9._-].*",
   "console.theme": "wso2is",
   "console.session.params.userIdleTimeOut": 600,
@@ -2209,6 +2218,7 @@
   "external_api_client.http_client.connection_pool_size": "20",
   "external_api_client.http_client.max_connection_per_route": "3",
   "external_api_client.retry_count": "0",
+  "external_api_client.response_limit": "1048576",
 
   "outbound_adapters.httppublisher.enabled": true,
   "outbound_adapters.httppublisher.httpConnectionTimeout": "5000",
@@ -2255,6 +2265,9 @@
     "INVITED_USER_REGISTRATION": "30"
   },
   "flow_execution.enable_legacy_flows": false,
+  "flow_execution.enable_legacy_self_registration_flow": false,
+  "flow_execution.enable_legacy_password_recovery_flow": false,
+  "flow_execution.enable_legacy_invited_user_registration_flow": false,
   "flow_execution.registration.display_claim_availability": false,
   "branding_configuration.custom_content.max_file_size": "1048576",
   "captcha.enable_captcha_for_local_otp_authenticators": true,
@@ -2279,5 +2292,7 @@
   "branding_configuration.use_intermediate_loader_page": false,
   "branding_configuration.use_invalid_tenant_domain_error_page_from_auth_portal": false,
 
-  "enhanced_organization_authentication_feature.enabled": false
+  "enhanced_organization_authentication_feature.enabled": true,
+
+  "workflow_engine.max_approver_notifications": 15
 }
