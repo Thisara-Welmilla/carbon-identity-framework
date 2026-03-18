@@ -1189,6 +1189,23 @@
             <Enable>{{oauth.token_persistence.enable}}</Enable>
             <PoolSize>0</PoolSize>
             <RetryCount>{{oauth.token_generation.retry_count_on_persistence_failures}}</RetryCount>
+            <!-- Determines whether access tokens should be persisted in the database.
+                 Default: true. Set to false to enable the non-persistent access token feature. -->
+            <PersistAccessToken>{{oauth.token_persistence.persist_access_token | default(true)}}</PersistAccessToken>
+            <!-- Determines whether refresh tokens should be persisted in the database.
+                 Default: true. Set to false to enable the non-persistent refresh token feature.
+                 Note: This feature is only subject to use with non-persistent access token feature. -->
+            <PersistRefreshToken>{{oauth.token_persistence.persist_refresh_token | default(true)}}</PersistRefreshToken>
+            <!-- Applicable when non-persistent access tokens are enabled.
+                 Determines whether revoked access tokens should still be retained.
+                 Default: true. -->
+            {% if oauth.token_persistence.retain_revoked_token is defined %}
+            <KeepRevokedAccessTokens>{{ oauth.token_persistence.retain_revoked_token }}</KeepRevokedAccessTokens>
+            {% elif oauth.token_persistence.retain_revoked_access_token is defined %}
+            <KeepRevokedAccessTokens>{{ oauth.token_persistence.retain_revoked_access_token }}</KeepRevokedAccessTokens>
+            {% else %}
+            <KeepRevokedAccessTokens>true</KeepRevokedAccessTokens>
+            {% endif %}
         </TokenPersistence>
 
         <!--
@@ -1565,6 +1582,7 @@
         {% endif %}
         <ReturnValidNameIDFormat>{{saml.return_valid_name_id_format}}</ReturnValidNameIDFormat>
         <SAMLSLOFrontChannelPostBindingLogoutRequestSignatureWithTenantCert>{{saml.slo.front_channel.post_binding.logout_request_signature_with_tenant_cert}}</SAMLSLOFrontChannelPostBindingLogoutRequestSignatureWithTenantCert>
+        <SAMLAllowNestedAssertionsInResponse>{{saml.response.allow_nested_assertions}}</SAMLAllowNestedAssertionsInResponse>
     </SSOService>
 
     <Consent>
@@ -2484,6 +2502,7 @@
             <HTTPConnectionMaxPerRoute>{{external_api_client.http_client.max_connection_per_route}}</HTTPConnectionMaxPerRoute>
         </HTTPClient>
         <DefaultRetryCount>{{external_api_client.retry_count}}</DefaultRetryCount>
+        <DefaultResponseLimit>{{external_api_client.response_limit}}</DefaultResponseLimit>
     </ExternalAPIClient>
 
     <Webhooks>
@@ -2493,6 +2512,10 @@
     <LocalAuthenticators>
         <HideUserExistenceOnAuthFlow>{{authentication.local_authenticators.hide_user_existence}}</HideUserExistenceOnAuthFlow>
     </LocalAuthenticators>
+
+    <IdentitySecretManager>
+        <SecretValueClobColumnExists>{{identity_secret_manager.secret_value_clob_column_exists}}</SecretValueClobColumnExists>
+    </IdentitySecretManager>
 
     <EventListeners>
         <EventListener id="input_validation"
@@ -3012,6 +3035,11 @@
                    enable="{{cache.push_device_registration_request_cache.enable}}"
                    timeout="{{cache.push_device_registration_request_cache.timeout}}"
                    capacity="{{cache.push_device_registration_request_cache.capacity}}"
+                   isDistributed="false"/>
+            <Cache id="saml_cert_cache" name="SAMLCertCache"
+                   enable="{{cache.saml_cert_cache.enable}}"
+                   timeout="{{cache.saml_cert_cache.timeout}}"
+                   capacity="{{cache.saml_cert_cache.capacity}}"
                    isDistributed="false"/>
             {% for cache in cache.manager %}
              <Cache name="{{cache.name}}"
@@ -4231,6 +4259,7 @@
                     <Path>/oauth2/userinfo</Path>
                     <Path>/oauth2/authorize</Path>
                     <Path>/oauth2/jwks</Path>
+                    <Path>/oauth2/authn</Path>
                 </SubPaths>
             </Context>
             <Context>
@@ -4808,6 +4837,9 @@
 
     <!-- Configuration to enable or disable claim filtering based on scope. -->
     <EnableScopeBasedClaimFiltering>{{authentication.enable_scope_based_claim_filtering}}</EnableScopeBasedClaimFiltering>
+    <!-- Configuration options for controlling the inclusion of additional information in API-based authentication responses. -->
+    <IncludeAuthFailureReasonInAPIBasedAuthResponse>{{authentication.include_auth_failure_reason_in_api_based_response}}</IncludeAuthFailureReasonInAPIBasedAuthResponse>
+    <IncludeMultiOptionsInAPIBasedAuthResponse>{{authentication.include_multi_options_in_api_based_auth_response}}</IncludeMultiOptionsInAPIBasedAuthResponse>
 
     <!-- Configuration to allow only SP requested claims during federated flow. -->
     <AllowSPRequestedFedClaimsOnly>{{authentication.allow_sp_requested_fed_claims_only}}</AllowSPRequestedFedClaimsOnly>
@@ -5107,6 +5139,9 @@
             {% endfor %}
         </FlowTypeTTLs>
         <EnableLegacyFlows>{{flow_execution.enable_legacy_flows}}</EnableLegacyFlows>
+        <EnableLegacySelfRegistrationFlow>{{flow_execution.enable_legacy_self_registration_flow}}</EnableLegacySelfRegistrationFlow>
+        <EnableLegacyPasswordRecoveryFlow>{{flow_execution.enable_legacy_password_recovery_flow}}</EnableLegacyPasswordRecoveryFlow>
+        <EnableLegacyInvitedUserRegistrationFlow>{{flow_execution.enable_legacy_invited_user_registration_flow}}</EnableLegacyInvitedUserRegistrationFlow>
         <Registration>
             <DisplayClaimAvailability>{{flow_execution.registration.display_claim_availability}}</DisplayClaimAvailability>
             <DefaultUserStore>{{flow_execution.registration.default_user_store}}</DefaultUserStore>
@@ -5158,4 +5193,7 @@
 
     <TenantLevelAuthenticationConfigForAuthSequence>{{tenant_level_application_authentication_config.enabled_for_auth_sequence}}</TenantLevelAuthenticationConfigForAuthSequence>
     <EnhancedOrganizationAuthenticationFeatureEnabled>{{enhanced_organization_authentication_feature.enabled}}</EnhancedOrganizationAuthenticationFeatureEnabled>
+    <WorkflowEngine>
+        <MaxApproverNotifications>{{workflow_engine.max_approver_notifications}}</MaxApproverNotifications>
+    </WorkflowEngine>
 </Server>
